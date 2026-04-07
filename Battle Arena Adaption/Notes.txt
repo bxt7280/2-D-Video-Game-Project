@@ -1,0 +1,39 @@
+Goals
+- Find a way to load a map created with third party program
+    - tiles program with csv
+
+- Add a way to classify different sprites such as main character, enemy_idle, enemy_attack, stationary, player_projectile, enemy_projectile
+    - May make looping through sprites easier.
+        - For example, not every sprite needs to save its previous Coordinates.
+    - Also, - Make a "Can Collide List" in the Sprite class determining what type of sprites a certain sprite can collide with.  
+
+- Make a class that saves all methods pertaining to sprite actions.
+    - For example, multiple sprites need save their coordinates. No reason to repeat code. 
+
+- Find better way than ctrlKeyPressDelay variable in controller?
+    - could use events instead of keypress
+
+- find way to univerallize loading images into spritesheet?
+
+- rename collision detection from getOutOfTube to collideWithSprite or something
+
+- Is the contactWithBorder method in model even needed?
+
+
+TODAY
+*- Add enemy sprite
+    *- animate idle animation
+- Work on collision detection between sprites
+    - Add sprite categories
+    *- have fireball make enemy animate being "hurt"
+
+*- have enemy track main character
+
+
+- Perhaps change sprites x and y to vector
+
+- Make GitHub for backup
+
+
+
+        
