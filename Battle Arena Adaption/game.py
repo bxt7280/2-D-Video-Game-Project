@@ -163,8 +163,12 @@ class Slime(Sprite):
 		self.px = 0
 		self.py = 0
 		self.provoked = False
+		self.provokedCounter = 0
 		self.isHurt = False
 		self.isHurtCounter = 0
+
+		# Save original position as vector
+		self.originalPos = pygame.math.Vector2(self.x, self.y)
 	
 		# Load all SpriteSheets
 		self.model.dictOfSpriteSheets["slimeSpriteSheets"] = []
@@ -187,7 +191,7 @@ class Slime(Sprite):
 
 
 		# Have slime follow mainCharacter based on conditions
-		if self.provoked == True:
+		if self.provoked == True and self.provokedCounter > 0:
 			# if self.distVector.distance_to(self.model.mainCharacter.distVector) <= 150:
 			# 	self.distVector.move_towards_ip(self.model.mainCharacter.distVector, 5)
 			# 	self.x = self.distVector.x
@@ -197,7 +201,18 @@ class Slime(Sprite):
 				self.distVector.move_towards_ip(self.model.mainCharacter.distVector, 3)
 				self.x = self.distVector.x
 				self.y = self.distVector.y
-						
+			
+			self.provokedCounter -= 1
+
+		if self.provokedCounter == 0:
+			self.provoked = False
+
+		if self.provoked == False:
+			self.distVector.distance_to(self.originalPos)
+			self.distVector.move_towards_ip(self.originalPos, 5)
+			self.x = self.distVector.x
+			self.y = self.distVector.y
+	
 		
 		self.animate()		
 		
@@ -242,6 +257,7 @@ class Slime(Sprite):
 			self.isHurt = True
 			self.isHurtCounter = 20
 			self.provoked = True
+			self.provokedCounter = 150
 
 		# In the sprite, but previously on left hand side of the sprite
 		if self.x + self.hitboxLeft + (self.w + self.hitboxW) >= sprite.x + sprite.hitboxLeft and self.px + self.hitboxLeft + (self.w + self.hitboxW) <= sprite.x + sprite.hitboxLeft:
