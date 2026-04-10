@@ -4,6 +4,7 @@ import time
 from pygame.locals import*
 from enum import Enum
 import os
+import random
 
 class Direction(Enum):
 	UP = "UP"
@@ -121,7 +122,7 @@ class Fireball(Sprite):
 			self.isActive = False
 
 	def collideWithSprite(self, sprite):
-			if not(isinstance(sprite, MainCharacter)):
+			if not(isinstance(sprite, MainCharacter)) and isinstance(sprite, Slime):
 				self.isActive = False
 				self.explode()		
 
@@ -138,9 +139,10 @@ class FireballExplosion(Sprite):
 		self.model = model
 	
 		# Load all SpriteSheets
-		self.model.dictOfSpriteSheets["fireballExplosionSpriteSheets"] = []
-		for fileName in os.listdir("./Images/stylized_explosion_001_small_yellow"):
-			self.model.dictOfSpriteSheets["fireballExplosionSpriteSheets"].append(SpriteSheet("./Images/stylized_explosion_001_small_yellow/" + fileName, 9, 1))
+		if "fireballExplosionSpriteSheets" not in self.model.dictOfSpriteSheets.keys():
+			self.model.dictOfSpriteSheets["fireballExplosionSpriteSheets"] = []
+			for fileName in os.listdir("./Images/stylized_explosion_001_small_yellow"):
+				self.model.dictOfSpriteSheets["fireballExplosionSpriteSheets"].append(SpriteSheet("./Images/stylized_explosion_001_small_yellow/" + fileName, 9, 1))
 
 		self.explodeSpriteSheets = self.model.dictOfSpriteSheets["fireballExplosionSpriteSheets"]
 
@@ -156,6 +158,61 @@ class FireballExplosion(Sprite):
 			self.currentSpriteCellIndex = 0
 			self.isActive = False
 
+class LightningBolt(Sprite):
+	def __init__(self, xPos, yPos, model):
+		super(LightningBolt, self).__init__(xPos, yPos, 128, 256, False, False, True)
+		self.model = model
+		self.animateDuration = 4
+	
+		# Load all SpriteSheets
+		if "lightningBoltSpriteSheets" not in self.model.dictOfSpriteSheets.keys():
+			self.model.dictOfSpriteSheets["lightningBoltSpriteSheets"] = []
+			for fileName in os.listdir("./Images/lightning"):
+				self.model.dictOfSpriteSheets["lightningBoltSpriteSheets"].append(SpriteSheet("./Images/lightning/" + fileName, 5, 1))
+
+		self.lightningBoltSpriteSheets = self.model.dictOfSpriteSheets["lightningBoltSpriteSheets"]
+
+		self.currentSpriteSheet = self.lightningBoltSpriteSheets[0]
+		
+	def update(self):
+		self.animate()
+		
+	def animate(self):
+		self.currentSpriteCellIndex += 1
+			
+		if self.currentSpriteCellIndex > 4:
+			self.currentSpriteCellIndex = 0
+			self.animateDuration -= 1
+			
+		if self.animateDuration == 0:
+			self.isActive = False
+
+
+class BloodSplatter(Sprite):
+	def __init__(self, xPos, yPos, model):
+		super(BloodSplatter, self).__init__(xPos, yPos, 64, 64, False, False, True)
+		self.model = model
+	
+		# Load all SpriteSheets
+		if "bloodSplatterSpriteSheets" not in self.model.dictOfSpriteSheets.keys():
+			self.model.dictOfSpriteSheets["bloodSplatterSpriteSheets"] = []
+			for fileName in os.listdir("./Images/bloodSplatter"):
+				self.model.dictOfSpriteSheets["bloodSplatterSpriteSheets"].append(SpriteSheet("./Images/bloodSplatter/" + fileName, 10, 1))
+
+		self.bloodSplatterSpriteSheets = self.model.dictOfSpriteSheets["bloodSplatterSpriteSheets"]
+
+		self.currentSpriteSheet = self.bloodSplatterSpriteSheets[0]
+		
+	def update(self):
+		self.animate()
+		
+	def animate(self):
+		self.currentSpriteCellIndex += 1
+			
+		if self.currentSpriteCellIndex > 9:
+			self.currentSpriteCellIndex = 0
+			self.isActive = False
+
 class Slime(Sprite):
 	def __init__(self, xPos, yPos, model):
 		super(Slime, self).__init__(xPos, yPos, 64, 64, True, True, True)
@@ -166,14 +223,18 @@ class Slime(Sprite):
 		self.provokedCounter = 0
 		self.isHurt = False
 		self.isHurtCounter = 0
+		self.isDying = False
+		self.deathCounter = 0
+		
 
 		# Save original position as vector
 		self.originalPos = pygame.math.Vector2(self.x, self.y)
 	
 		# Load all SpriteSheets
-		self.model.dictOfSpriteSheets["slimeSpriteSheets"] = []
-		for fileName in os.listdir("./Images/slime"):
-			self.model.dictOfSpriteSheets["slimeSpriteSheets"].append(SpriteSheet("./Images/slime/" + fileName, 5, 3))
+		if "slimeSpriteSheets" not in self.model.dictOfSpriteSheets.keys():
+			self.model.dictOfSpriteSheets["slimeSpriteSheets"] = []
+			for fileName in os.listdir("./Images/slime"):
+				self.model.dictOfSpriteSheets["slimeSpriteSheets"].append(SpriteSheet("./Images/slime/" + fileName, 5, 3))
 
 		self.slimeSpriteSheets = self.model.dictOfSpriteSheets["slimeSpriteSheets"]
 
@@ -191,30 +252,36 @@ class Slime(Sprite):
 
 
 		# Have slime follow mainCharacter based on conditions
-		if self.provoked == True and self.provokedCounter > 0:
-			# if self.distVector.distance_to(self.model.mainCharacter.distVector) <= 150:
-			# 	self.distVector.move_towards_ip(self.model.mainCharacter.distVector, 5)
-			# 	self.x = self.distVector.x
-			# 	self.y = self.distVector.y
+		# if self.provoked == True and self.provokedCounter > 0:
+		# 	if self.distVector.distance_to(self.model.mainCharacter.distVector) <= 150:
+		# 		self.distVector.move_towards_ip(self.model.mainCharacter.distVector, 5)
+		# 		self.x = self.distVector.x
+		# 		self.y = self.distVector.y
 
-			if self.distVector.distance_to(self.model.mainCharacter.distVector) <= 1000:
-				self.distVector.move_towards_ip(self.model.mainCharacter.distVector, 3)
-				self.x = self.distVector.x
-				self.y = self.distVector.y
+		# 	if self.distVector.distance_to(self.model.mainCharacter.distVector) <= 1000:
+		# 		self.distVector.move_towards_ip(self.model.mainCharacter.distVector, 3)
+		# 		self.x = self.distVector.x
+		# 		self.y = self.distVector.y
 			
-			self.provokedCounter -= 1
+		# 	self.provokedCounter -= 1
 
-		if self.provokedCounter == 0:
-			self.provoked = False
+		# if self.provokedCounter == 0:
+		# 	self.provoked = False
 
-		if self.provoked == False:
-			self.distVector.distance_to(self.originalPos)
-			self.distVector.move_towards_ip(self.originalPos, 5)
-			self.x = self.distVector.x
-			self.y = self.distVector.y
-	
-		
-		self.animate()		
+		# if self.provoked == False:
+		# 	self.distVector.distance_to(self.originalPos)
+		# 	self.distVector.move_towards_ip(self.originalPos, 5)
+		# 	self.x = self.distVector.x
+		# 	self.y = self.distVector.y
+
+		# Death if hit by lightning
+		if self.isDying == True:
+			if self.deathCounter == 0:
+				self.bleed()
+				self.isActive = False
+			self.deathCounter -= 1
+
+		self.animate()	
 		
 	def animate(self):
 		if self.isHurt == True and self.isHurtCounter > 0:
@@ -253,25 +320,38 @@ class Slime(Sprite):
 			self.y = 0 - self.hitboxTop
 
 	def collideWithSprite(self, sprite):
-		if isinstance(sprite, Fireball): # Eventually change to sprite category rather than Fireballs specifically		
+		if isinstance(sprite, Fireball) and self.isDying == False: # Eventually change to sprite category rather than Fireballs specifically		
 			self.isHurt = True
 			self.isHurtCounter = 20
 			self.provoked = True
 			self.provokedCounter = 150
+			self.isDying = True
+			self.deathCounter = 20
 
-		# In the sprite, but previously on left hand side of the sprite
-		if self.x + self.hitboxLeft + (self.w + self.hitboxW) >= sprite.x + sprite.hitboxLeft and self.px + self.hitboxLeft + (self.w + self.hitboxW) <= sprite.x + sprite.hitboxLeft:
-			self.x = sprite.x + sprite.hitboxLeft - self.hitboxLeft	- (self.w + self.hitboxW)	
-		# In the sprite, but previously on right hand side of the sprite
-		if self.x + self.hitboxLeft <= sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW) and self.px + self.hitboxLeft >= sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW):
-			self.x = sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW) - self.hitboxLeft
-		# In the sprite, but previously above the sprite
-		if self.y + self.hitboxTop +(self.h + self.hitboxH) >= sprite.y + sprite.hitboxTop and self.py + self.hitboxTop + (self.h + self.hitboxH) <= sprite.y + sprite.hitboxTop:
-			self.y = sprite.y + sprite.hitboxTop - self.hitboxTop - (self.h + self.hitboxH)
-		# In the sprite, but previously below the sprite
-		if self.y + self.hitboxTop <= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) and self.py + self.hitboxTop >= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH):
-			self.y = sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) - self.hitboxTop
+		if isinstance(sprite, Slime):
+			# In the sprite, but previously on left hand side of the sprite
+			if self.x + self.hitboxLeft + (self.w + self.hitboxW) >= sprite.x + sprite.hitboxLeft and self.px + self.hitboxLeft + (self.w + self.hitboxW) <= sprite.x + sprite.hitboxLeft:
+				self.x = sprite.x + sprite.hitboxLeft - self.hitboxLeft	- (self.w + self.hitboxW)	
+			# In the sprite, but previously on right hand side of the sprite
+			if self.x + self.hitboxLeft <= sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW) and self.px + self.hitboxLeft >= sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW):
+				self.x = sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW) - self.hitboxLeft
+			# In the sprite, but previously above the sprite
+			if self.y + self.hitboxTop +(self.h + self.hitboxH) >= sprite.y + sprite.hitboxTop and self.py + self.hitboxTop + (self.h + self.hitboxH) <= sprite.y + sprite.hitboxTop:
+				self.y = sprite.y + sprite.hitboxTop - self.hitboxTop - (self.h + self.hitboxH)
+			# In the sprite, but previously below the sprite
+			if self.y + self.hitboxTop <= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) and self.py + self.hitboxTop >= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH):
+				self.y = sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) - self.hitboxTop
 
+	def hitByLightning(self):
+		self.model.spriteListBuffer.append(LightningBolt(self.x - 34, self.y - 220 , self.model))
+		self.isHurt = True
+		self.isHurtCounter = 20
+		self.isDying = True
+		self.deathCounter = 20
+
+	def bleed(self):
+		self.model.spriteListBuffer.append(BloodSplatter(self.x, self.y, self.model))
+	
 	def savePreviousCoordinates(self):
 		self.px = self.x
 		self.py = self.y
@@ -294,6 +374,8 @@ class MainCharacter(Sprite):
 		self.px = 0
 		self.py = 0
 		self.fireballChargeCounter = 0
+		self.lightningAttackRecharge = 0
+		self.lightningAttackOn = False
 		
 		# Collision/Hitbox parameters
 		self.hitboxLeft = 105
@@ -335,6 +417,12 @@ class MainCharacter(Sprite):
 	def update(self):
 		self.distVector.x = self.x + self.hitboxLeft
 		self.distVector.y = self.y + self.hitboxTop
+
+		if self.lightningAttackOn == True:
+			self.lightningAttack()
+			
+			if self.lightningAttackRecharge > 0:
+				self.lightningAttackRecharge -= 1
 
 	def animateIdle(self):
 		match(self.direction):
@@ -608,23 +696,43 @@ class MainCharacter(Sprite):
 	def throwFireball(self, offsetX, offsetY):
 		self.model.sprites.append(Fireball(self.x + offsetX, self.y + offsetY, self.direction, self.model))
 
+	def lightningAttack(self):
+		# if self.lightningAttackRecharge == 0:
+		# 	listOfSlimes = [sprite for sprite in self.model.sprites if isinstance(sprite, Slime)]
+		# 	if len(listOfSlimes) > 0:
+		# 		randomIndex = random.randrange(len(listOfSlimes))
+		# 		listOfSlimes[randomIndex].hitByLightning()
+		# 		self.lightningAttackRecharge = 30
+		if self.lightningAttackRecharge == 0:
+			listOfSlimes = [sprite for sprite in self.model.sprites if isinstance(sprite, Slime)]
+			if len(listOfSlimes) > 0:
+				for slime in listOfSlimes:
+					if random.randrange(1, 60) == 5 and not(slime.isDying):
+						slime.hitByLightning()
+			self.lightningAttackRecharge = 20
+	
+
+
 
 class Model():
 	def __init__(self):
 		self.dest_x = 0
 		self.dest_y = 0 
 		self.dictOfSpriteSheets = {} 
-		self.mainCharacter = MainCharacter(400, 500, self) 
+		self.mainCharacter = MainCharacter(400, 700, self) 
 		self.sprites = [] # Main list of sprites
 		self.spriteListBuffer = [] # List of sprites that need to be added to main sprite list
 		self.sprites.append(self.mainCharacter)   
 		self.screenSize = 0
 
 		# Toggle Hitbox mode on/off
-		self.hitBoxModeOn = True
+		self.hitBoxModeOn = False
 
-		self.sprites.append(Slime(200, 100, self))
-		self.sprites.append(Slime(600, 100, self))
+		# self.sprites.append(Slime(200, 350, self))
+		# self.sprites.append(Slime(600, 100, self))
+
+		for i in range(50):
+			self.sprites.append(Slime(random.randrange(0,800), random.randrange(0, 800), self))
 
 		#self.sprites.append(Border(50, 50, self))
 
@@ -764,6 +872,8 @@ class Controller():
 				# Hitbox Mode ON/OFF
 				if event.key == K_h:
 					self.model.hitBoxModeOn = not self.model.hitBoxModeOn
+				if event.key == K_SPACE:
+					self.model.mainCharacter.lightningAttackOn = not self.model.mainCharacter.lightningAttackOn
 
 			# elif event.type == pygame.MOUSEBUTTONUP:
 			# 	# get current x and y coordinates when mouse is clicked
