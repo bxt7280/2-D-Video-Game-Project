@@ -28,6 +28,7 @@ class MainCharacter(Sprite):
 		self.fireballChargeCounter = 0
 		self.lightningAttackRecharge = 0
 		self.lightningAttackOn = False
+		self.autoFireballCooldown = 0
 		
 		# Collision/Hitbox parameters
 		self.hitboxLeft = 105
@@ -75,6 +76,11 @@ class MainCharacter(Sprite):
 			
 			if self.lightningAttackRecharge > 0:
 				self.lightningAttackRecharge -= 1
+
+		if self.autoFireballCooldown > 0:
+			self.autoFireballCooldown -= 1
+			
+		self.autoFireball()
 
 	def animateIdle(self):
 		match(self.direction):
@@ -363,6 +369,22 @@ class MainCharacter(Sprite):
 						slime.hitByLightning()
 			self.lightningAttackRecharge = 20
 
+	def autoFireball(self):
+		if self.autoFireballCooldown == 0:
+			self.autoFireballCooldown = 50
+			listOfSlimes = [sprite for sprite in self.model.sprites if isinstance(sprite, Slime)]
+			if len(listOfSlimes) > 0: 
+				closestDistanceFromChar = 1000
+				closestSlimeIndex = 0
+				for i in range(len(listOfSlimes)):
+					if self.distVector.distance_to(listOfSlimes[i].distVector) < closestDistanceFromChar:
+						closestDistanceFromChar = self.distVector.distance_to(listOfSlimes[i].distVector)
+						print(closestDistanceFromChar)
+						closestSlimeIndex = i
+
+				self.model.sprites.append(HomingFireball(self.x + self.hitboxLeft, self.y + self.hitboxTop, self.model, listOfSlimes[closestSlimeIndex]))
+
+
 class Fireball(Sprite):
 	def __init__(self, xPos, yPos, direction, model):
 		super(Fireball, self).__init__(xPos, yPos, 47, 47, True, True, True)
@@ -431,6 +453,68 @@ class Fireball(Sprite):
 			case _:
 				self.direction = Direction.UP
 
+	def collideWithBorder(self, screenSize):
+		# Past the border, but previously on left hand side of the border
+		if self.x + self.hitboxLeft + (self.w + self.hitboxW) >= screenSize[0] and self.px + self.hitboxLeft + (self.w + self.hitboxW) <= screenSize[0]:
+			self.isActive = False
+			self.explode()		
+		# Past the border, but previously on right hand side of the border
+		if self.x + self.hitboxLeft <= 0 and self.px + self.hitboxLeft >= 0:
+			self.isActive = False
+			self.explode()				
+		# Past the border, but previously above the border
+		if self.y + self.hitboxTop + (self.h + self.hitboxH) >= screenSize[1] and self.py + self.hitboxTop + (self.h + self.hitboxH) <= screenSize[1]:
+			self.isActive = False
+			self.explode()	
+		# Past the border, but previously below the border
+		if self.y + self.hitboxTop <= 0 and self.py + self.hitboxTop >= 0:
+			self.explode()	
+			self.isActive = False
+
+	def collideWithSprite(self, sprite):
+			if not(isinstance(sprite, MainCharacter)) and isinstance(sprite, Slime):
+				self.isActive = False
+				self.explode()		
+
+	def explode(self):
+		self.model.spriteListBuffer.append(FireballExplosion(self.x - 27, self.y - 25, self.model))
+
+	def savePreviousCoordinates(self):
+		self.px = self.x
+		self.py = self.y
+
+class HomingFireball(Sprite):
+	def __init__(self, xPos, yPos, model, targetSprite):
+		super(HomingFireball, self).__init__(xPos, yPos, 47, 47, True, True, True)
+		self.vert_vel = 5.0
+		self.px = 0
+		self.py = 0
+		self.model = model
+		self.targetSprite = targetSprite
+		self.distVector = pygame.math.Vector2(self.x, self.y)
+		
+		# Load SpriteSheet
+		if "fireballSpriteSheets" not in self.model.dictOfSpriteSheets.keys():
+			self.model.dictOfSpriteSheets["fireballSpriteSheets"] = []
+			for fileName in os.listdir("./Images/fireball"):
+				self.model.dictOfSpriteSheets["fireballSpriteSheets"].append(SpriteSheet("./Images/fireball/" + fileName, 1, 1))
+
+		self.currentSpriteSheet = self.model.dictOfSpriteSheets["fireballSpriteSheets"][0]
+		
+	def update(self):
+		self.vert_vel += 1.0
+		
+		self.distVector.x = self.x + self.hitboxLeft
+		self.distVector.y = self.y + self.hitboxTop
+		
+		if self.targetSprite.isActive == True:
+			self.distVector.move_towards_ip(self.targetSprite.distVector, 5 + self.vert_vel)
+			self.x = self.distVector.x
+			self.y = self.distVector.y
+		else:
+			self.explode()
+			self.isActive = False
+		
 	def collideWithBorder(self, screenSize):
 		# Past the border, but previously on left hand side of the border
 		if self.x + self.hitboxLeft + (self.w + self.hitboxW) >= screenSize[0] and self.px + self.hitboxLeft + (self.w + self.hitboxW) <= screenSize[0]:
@@ -648,7 +732,7 @@ class Slime(Sprite):
 			self.y = 0 - self.hitboxTop
 
 	def collideWithSprite(self, sprite):
-		if isinstance(sprite, Fireball) and self.isDying == False: # Eventually change to sprite category rather than Fireballs specifically		
+		if isinstance(sprite, Fireball) or isinstance(sprite, HomingFireball) and self.isDying == False: # Eventually change to sprite category rather than Fireballs specifically		
 			self.isHurt = True
 			self.isHurtCounter = 20
 			self.provoked = True

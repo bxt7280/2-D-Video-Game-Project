@@ -15,11 +15,13 @@ class Model():
 		# Toggle Hitbox mode on/off
 		self.hitBoxModeOn = False
 
-		# self.sprites.append(Slime(200, 350, self))
+		# testSlime = Slime(200, 350, self)
+		# self.sprites.append(testSlime)
+		# self.sprites.append(HomingFireball(700, 700, self, testSlime))
 		# self.sprites.append(Slime(600, 100, self))
 
-		for i in range(50):
-			self.sprites.append(Slime(random.randrange(0,800), random.randrange(0, 650), self))
+		for i in range(10):
+			self.sprites.append(Slime(random.randrange(0,800), random.randrange(0, 500), self))
 
 		#self.sprites.append(Border(50, 50, self))
 
