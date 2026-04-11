@@ -1,14 +1,12 @@
-from Sprites import *
 import random
+from Sprites import *
 
 class Model():
 	def __init__(self):
-		self.dest_x = 0
-		self.dest_y = 0 
 		self.dictOfSpriteSheets = {} 
-		self.mainCharacter = MainCharacter(400, 800, self) 
 		self.sprites = [] # Main list of sprites
 		self.spriteListBuffer = [] # List of sprites that need to be added to main sprite list
+		self.mainCharacter = MainCharacter(400, 800, self) 		
 		self.sprites.append(self.mainCharacter)   
 		self.screenSize = 0
 
@@ -23,33 +21,22 @@ class Model():
 		for i in range(10):
 			self.sprites.append(Slime(random.randrange(0,800), random.randrange(0, 500), self))
 
-		#self.sprites.append(Border(50, 50, self))
-
+		# self.sprites.append(Border(50, 50)) # Use as an invisible border on top of tile maps. Experimental.
 
 	def update(self):
 		# Update all sprites
-		for sprite in self.sprites:
-			sprite.update()
+		self.updateAllSprites()
 
 		# Check for collisions with border
-		for sprite in self.sprites:
-			if sprite.canCollideWithBorder:
-				sprite.collideWithBorder(self.screenSize)
+		self.checkBorderCollisions()
 
 		# Check for collisions with other sprites
-		#print(self.sprites)
-		for sprite in self.sprites:
-			if sprite.canCollideWithSprite:
-				for sprite2 in self.sprites:
-					if sprite2 != sprite:
-						if self.contactWithSprite(sprite, sprite2): 
-							sprite.collideWithSprite(sprite2)
-
+		self.checkSpriteCollisions()
 
 		# Add sprites from spriteListBuffer
-		self.sprites.extend(self.spriteListBuffer)
-		self.spriteListBuffer.clear()
-				
+		# Used because one cannot add sprites to a list while iterating through it
+		self.addBufferedSprites()
+
 		# Clean up and remove all inactive or "dead" sprites
 		for sprite in self.sprites:
 			if sprite.isActive == False:
@@ -58,24 +45,32 @@ class Model():
 		# Tell all applicable sprites to save their coordinates
 		self.universalSavePreviousCoordinates()
 
-	# Returns true if sprite a is in contact with sprite b. No collision hitbox considered
-	# def contactWithSprite(self, a, b):
-	# 	if a.x + a.w < b.x:
-	# 		print("no contact")
-	# 		return False
-	# 	if a.x > b.x + b.w:
-	# 		print("no contact")
-	# 		return False
-	# 	if a.y + a.h < b.y: # assumes bigger is downward
-	# 		print("no contact")
-	# 		return False
-	# 	if a.y > b.y + b.h: # assumes bigger is downward
-	# 		print("no contact")
-	# 		return False
-		
-	# 	print("contact")
-	# 	return True
-	
+	def updateAllSprites(self):
+		for sprite in self.sprites:
+			sprite.update()
+
+	def checkBorderCollisions(self):
+		for sprite in self.sprites:
+			if sprite.canCollideWithBorder:
+				sprite.collideWithBorder(self.screenSize)
+
+	def checkSpriteCollisions(self):
+		for sprite in self.sprites:
+			if sprite.canCollideWithSprite:
+				for sprite2 in self.sprites:
+					if sprite2 != sprite:
+						if self.contactWithSprite(sprite, sprite2): 
+							sprite.collideWithSprite(sprite2)
+
+	def addBufferedSprites(self):
+		self.sprites.extend(self.spriteListBuffer)
+		self.spriteListBuffer.clear()
+
+	def removeInactiveSprites(self):
+		for sprite in self.sprites:
+			if sprite.isActive == False:
+				self.sprites.remove(sprite)
+
 	# Returns true if sprite a is in contact with sprite b	
 	def contactWithSprite(self, a, b):
 		if a.x + a.hitboxLeft + (a.w + a.hitboxW) < b.x + b.hitboxLeft:

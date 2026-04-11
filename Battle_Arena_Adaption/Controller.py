@@ -5,20 +5,17 @@ from Util import Direction
 class Controller():
 	def __init__(self, model):
 		self.model = model
-		self.keep_going = True
+		self.keepGoing = True
 		self.editorToggle = True
 		self.spriteToBeDrawn = 0
-		self.ctrlKeyPressDelay = 0
-
-		pygame.key.set_repeat(5000)
 
 	def update(self):
 		for event in pygame.event.get():
 			if event.type == QUIT:
-				self.keep_going = False
+				self.keepGoing = False
 			elif event.type == KEYDOWN:
 				if event.key == K_ESCAPE:
-					self.keep_going = False
+					self.keepGoing = False
 				# Hitbox Mode ON/OFF
 				if event.key == K_h:
 					self.model.hitBoxModeOn = not self.model.hitBoxModeOn
@@ -53,15 +50,10 @@ class Controller():
 
 	
 	def evaluateKeyPress(self):
+		# Get list of all keys being pressed
 		keys = pygame.key.get_pressed()
 		
-		# Throw fireball. Delay added.
-		# if keys[K_LCTRL] and self.ctrlKeyPressDelay == 0:
-		# 	self.model.mainCharacter.throwFireball()
-		# 	self.ctrlKeyPressDelay = 3
-		# elif self.ctrlKeyPressDelay > 0:
-		# 	self.ctrlKeyPressDelay -= 1
-
+		# Throw Fireball 
 		if keys[K_LCTRL]:
 			self.model.mainCharacter.animateThrowFireball()
 		
@@ -90,9 +82,7 @@ class Controller():
 					self.model.mainCharacter.x += 6
 					self.model.mainCharacter.y += 6
 					self.model.mainCharacter.animateWalk()	
-				self.model.mainCharacter.changeDirection(Direction.DOWN_RIGHT)			
-			
-			
+				self.model.mainCharacter.changeDirection(Direction.DOWN_RIGHT)						
 			elif keys[K_LEFT]:
 				if not keys[K_LCTRL]:
 					self.model.mainCharacter.x -= 6
@@ -113,7 +103,6 @@ class Controller():
 				if not keys[K_LCTRL]:
 					self.model.mainCharacter.y += 6
 					self.model.mainCharacter.animateWalk()
-				self.model.mainCharacter.changeDirection(Direction.DOWN)
-				
+				self.model.mainCharacter.changeDirection(Direction.DOWN)			
 		else:
 			self.model.mainCharacter.animateIdle()

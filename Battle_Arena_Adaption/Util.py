@@ -1,7 +1,6 @@
 import pygame
 from enum import Enum
 
-
 class Direction(Enum):
 	UP = "UP"
 	DOWN = "DOWN"
@@ -12,7 +11,8 @@ class Direction(Enum):
 	DOWN_LEFT = "DOWN_LEFT"
 	DOWN_RIGHT = "DOWN_RIGHT"
 	NEUTRAL = "NEUTRAL"
-	
+
+# Automatically separates spritesheet into tiles and draws them on screen via index	
 class SpriteSheet:
 	def __init__(self, filename, cols, rows):
 		self.sheet = pygame.image.load(filename)

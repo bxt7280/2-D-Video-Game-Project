@@ -1,17 +1,17 @@
-import os
 import pygame
+import os
 import random
 from Util import Direction, SpriteSheet
 
 class Sprite():
-	def __init__(self, xPos, yPos, w, h, canCollideWithBorder, canCollideWithSprite, isActive):
+	def __init__(self, xPos, yPos, w, h, canCollideWithBorder, canCollideWithSprite):
 		self.x = xPos 
 		self.y = yPos 
 		self.w = w
 		self.h = h
 		self.canCollideWithBorder = canCollideWithBorder
 		self.canCollideWithSprite = canCollideWithSprite
-		self.isActive = isActive 
+		self.isActive = True 
 		self.currentSpriteSheet = 0
 		self.currentSpriteCellIndex = 0
 		# Collision/Hitbox Offsets
@@ -22,10 +22,9 @@ class Sprite():
 
 class MainCharacter(Sprite):
 	def __init__(self, xPos, yPos, model):
-		super(MainCharacter, self).__init__(xPos - 256/2, yPos - 256/2, 256, 256, True, True, True)
+		super(MainCharacter, self).__init__(xPos - 256/2, yPos - 256/2, 256, 256, True, True)
 		self.px = 0
 		self.py = 0
-		self.fireballChargeCounter = 0
 		self.lightningAttackRecharge = 0
 		self.lightningAttackOn = False
 		self.autoFireballCooldown = 0
@@ -64,19 +63,22 @@ class MainCharacter(Sprite):
 		# Set initial SpriteSheet
 		self.currentSpriteSheet = self.idleSpriteSheets[5]
 
+		# Create a vector to determine distance between sprites
 		self.distVector = pygame.math.Vector2(self.x, self.y)
 		
-
 	def update(self):
+		# Update distVector to save current coordinates
 		self.distVector.x = self.x + self.hitboxLeft
 		self.distVector.y = self.y + self.hitboxTop
 
+		# Lighting attack update
 		if self.lightningAttackOn == True:
 			self.lightningAttack()
 			
 			if self.lightningAttackRecharge > 0:
 				self.lightningAttackRecharge -= 1
 
+		# Auto fireball update
 		if self.autoFireballCooldown > 0:
 			self.autoFireballCooldown -= 1
 			
@@ -271,8 +273,6 @@ class MainCharacter(Sprite):
 			
 				if self.currentSpriteCellIndex > 22:					
 					self.currentSpriteCellIndex = 0
-				
-
 			case Direction.DOWN:
 				self.currentSpriteSheet = self.throwFireSpriteSheets[0]
 
@@ -283,7 +283,6 @@ class MainCharacter(Sprite):
 				
 				if self.currentSpriteCellIndex > 22:
 					self.currentSpriteCellIndex = 0
-
 			case Direction.UP:
 				self.currentSpriteSheet = self.throwFireSpriteSheets[5]
 
@@ -294,7 +293,6 @@ class MainCharacter(Sprite):
 
 				if self.currentSpriteCellIndex > 22:
 					self.currentSpriteCellIndex = 0
-
 			case Direction.RIGHT:
 				self.currentSpriteSheet = self.throwFireSpriteSheets[4]
 
@@ -305,7 +303,6 @@ class MainCharacter(Sprite):
 				
 				if self.currentSpriteCellIndex > 22:
 					self.currentSpriteCellIndex = 0
-
 			case Direction.UP_RIGHT:
 				self.currentSpriteSheet = self.throwFireSpriteSheets[7]
 
@@ -316,7 +313,6 @@ class MainCharacter(Sprite):
 				
 				if self.currentSpriteCellIndex > 22:
 					self.currentSpriteCellIndex = 0
-
 			case Direction.UP_LEFT:
 				self.currentSpriteSheet = self.throwFireSpriteSheets[6]
 
@@ -327,7 +323,6 @@ class MainCharacter(Sprite):
 
 				if self.currentSpriteCellIndex > 22:
 					self.currentSpriteCellIndex = 0
-
 			case Direction.DOWN_RIGHT:
 				self.currentSpriteSheet = self.throwFireSpriteSheets[2]
 
@@ -338,7 +333,6 @@ class MainCharacter(Sprite):
 			
 				if self.currentSpriteCellIndex > 22:
 					self.currentSpriteCellIndex = 0
-
 			case Direction.DOWN_LEFT:
 				self.currentSpriteSheet = self.throwFireSpriteSheets[1]
 
@@ -365,7 +359,7 @@ class MainCharacter(Sprite):
 			listOfSlimes = [sprite for sprite in self.model.sprites if isinstance(sprite, Slime)]
 			if len(listOfSlimes) > 0:
 				for slime in listOfSlimes:
-					if random.randrange(1, 60) == 5 and not(slime.isDying):
+					if random.randrange(1, 20) == 5 and not(slime.isDying):
 						slime.hitByLightning()
 			self.lightningAttackRecharge = 20
 
@@ -379,15 +373,13 @@ class MainCharacter(Sprite):
 				for i in range(len(listOfSlimes)):
 					if self.distVector.distance_to(listOfSlimes[i].distVector) < closestDistanceFromChar:
 						closestDistanceFromChar = self.distVector.distance_to(listOfSlimes[i].distVector)
-						print(closestDistanceFromChar)
 						closestSlimeIndex = i
 
 				self.model.sprites.append(HomingFireball(self.x + self.hitboxLeft, self.y + self.hitboxTop, self.model, listOfSlimes[closestSlimeIndex]))
 
-
 class Fireball(Sprite):
 	def __init__(self, xPos, yPos, direction, model):
-		super(Fireball, self).__init__(xPos, yPos, 47, 47, True, True, True)
+		super(Fireball, self).__init__(xPos, yPos, 47, 47, True, True)
 		self.vert_vel = 5.0
 		self.px = 0
 		self.py = 0
@@ -485,7 +477,7 @@ class Fireball(Sprite):
 
 class HomingFireball(Sprite):
 	def __init__(self, xPos, yPos, model, targetSprite):
-		super(HomingFireball, self).__init__(xPos, yPos, 47, 47, True, True, True)
+		super(HomingFireball, self).__init__(xPos, yPos, 47, 47, True, True)
 		self.vert_vel = 5.0
 		self.px = 0
 		self.py = 0
@@ -547,7 +539,7 @@ class HomingFireball(Sprite):
 
 class FireballExplosion(Sprite):
 	def __init__(self, xPos, yPos, model):
-		super(FireballExplosion, self).__init__(xPos, yPos, 96, 96, False, False, True)
+		super(FireballExplosion, self).__init__(xPos, yPos, 96, 96, False, False)
 		self.model = model
 	
 		# Load all SpriteSheets
@@ -572,7 +564,7 @@ class FireballExplosion(Sprite):
 
 class LightningBolt(Sprite):
 	def __init__(self, xPos, yPos, model):
-		super(LightningBolt, self).__init__(xPos, yPos, 128, 256, False, False, True)
+		super(LightningBolt, self).__init__(xPos, yPos, 128, 256, False, False)
 		self.model = model
 		self.animateDuration = 4
 	
@@ -602,7 +594,7 @@ class LightningBolt(Sprite):
 
 class BloodSplatter(Sprite):
 	def __init__(self, xPos, yPos, model):
-		super(BloodSplatter, self).__init__(xPos, yPos, 64, 64, False, False, True)
+		super(BloodSplatter, self).__init__(xPos, yPos, 64, 64, False, False)
 		self.model = model
 	
 		# Load all SpriteSheets
@@ -627,7 +619,7 @@ class BloodSplatter(Sprite):
 
 class Slime(Sprite):
 	def __init__(self, xPos, yPos, model):
-		super(Slime, self).__init__(xPos, yPos, 64, 64, True, True, True)
+		super(Slime, self).__init__(xPos, yPos, 64, 64, True, True)
 		self.model = model
 		self.px = 0
 		self.py = 0
@@ -661,7 +653,6 @@ class Slime(Sprite):
 		# Update distance vector
 		self.distVector.x = self.x + self.hitboxLeft
 		self.distVector.y = self.y + self.hitboxTop
-
 
 		# Have slime follow mainCharacter based on conditions
 		# if self.provoked == True and self.provokedCounter > 0:
@@ -770,8 +761,8 @@ class Slime(Sprite):
 
 # Imageless sprite used for invisible boundaries
 class Border(Sprite):
-	def __init__(self, xPos, yPos, model):
-		super(Border, self).__init__(xPos, yPos, 50, 50, False, False, True)
+	def __init__(self, xPos, yPos):
+		super(Border, self).__init__(xPos, yPos, 50, 50, False, False)
 		self.hitboxLeft = 0
 		self.hitboxTop = 0
 		self.hitboxW = 100

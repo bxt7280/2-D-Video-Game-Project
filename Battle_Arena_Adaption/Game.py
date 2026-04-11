@@ -16,7 +16,7 @@ class Game():
 		self.c = Controller(self.m)
 		
 	def run(self):
-		while self.c.keep_going:
+		while self.c.keepGoing:
 			self.c.update()
 			self.m.update()
 			self.v.update()
