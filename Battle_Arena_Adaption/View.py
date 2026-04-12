@@ -11,10 +11,18 @@ class View():
 		self.model.setScreenSize(screen_size)
 		self.background = pygame.image.load('./Images/forestBackground.png')
 
+		# User text input
+		self.displayText = False
+		self.base_font = pygame.font.Font(None, 32)
+		self.user_text = ""
+
 	def update(self):    
 		self.screen.fill([0,200,100])
 		self.screen.blit(self.background, (0, 0))
-		self.drawSprites()	
+		self.drawSprites()
+		if self.displayText:	
+			text_surface = self.base_font.render("Sprite Type: " + self.user_text,True,(255,255,255))
+			self.screen.blit(text_surface,(0,0))
 		pygame.display.flip()
 
 	def drawSprites(self):

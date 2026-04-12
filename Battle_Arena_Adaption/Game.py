@@ -13,17 +13,15 @@ class Game():
 
 		self.m = Model()
 		self.v = View(self.m)
-		self.c = Controller(self.m)
+		self.c = Controller(self.m, self.v)
 		
 	def run(self):
-		while self.c.keepGoing:
+		while self.c.keepGoing:		
 			self.c.update()
 			self.m.update()
 			self.v.update()
-
 			self.clock.tick(30)
 			#print(clock.get_fps())
-
 		print("Goodbye")
 
 game = Game()

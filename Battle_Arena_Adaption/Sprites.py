@@ -28,6 +28,7 @@ class MainCharacter(Sprite):
 		self.lightningAttackRecharge = 0
 		self.lightningAttackOn = False
 		self.autoFireballCooldown = 0
+		self.autoFireballAttackOn = False 
 		
 		# Collision/Hitbox parameters
 		self.hitboxLeft = 105
@@ -79,10 +80,11 @@ class MainCharacter(Sprite):
 				self.lightningAttackRecharge -= 1
 
 		# Auto fireball update
-		if self.autoFireballCooldown > 0:
-			self.autoFireballCooldown -= 1
-			
-		self.autoFireball()
+		if self.autoFireballAttackOn == True:
+			if self.autoFireballCooldown > 0:
+				self.autoFireballCooldown -= 1
+				
+			self.autoFireball()
 
 	def animateIdle(self):
 		match(self.direction):
@@ -359,9 +361,9 @@ class MainCharacter(Sprite):
 			listOfSlimes = [sprite for sprite in self.model.sprites if isinstance(sprite, Slime)]
 			if len(listOfSlimes) > 0:
 				for slime in listOfSlimes:
-					if random.randrange(1, 20) == 5 and not(slime.isDying):
+					if random.randrange(1, 15) == 5 and not(slime.isDying):
 						slime.hitByLightning()
-			self.lightningAttackRecharge = 20
+			self.lightningAttackRecharge = 30
 
 	def autoFireball(self):
 		if self.autoFireballCooldown == 0:

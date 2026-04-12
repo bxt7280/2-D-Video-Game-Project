@@ -13,13 +13,14 @@ class Model():
 		# Toggle Hitbox mode on/off
 		self.hitBoxModeOn = False
 
-		# testSlime = Slime(200, 350, self)
-		# self.sprites.append(testSlime)
+		slimeClass = Slime
+		testSlime = slimeClass(200, 350, self)
+		self.sprites.append(testSlime)
 		# self.sprites.append(HomingFireball(700, 700, self, testSlime))
 		# self.sprites.append(Slime(600, 100, self))
 
-		for i in range(10):
-			self.sprites.append(Slime(random.randrange(0,800), random.randrange(0, 500), self))
+		# for i in range(30):
+		# 	self.sprites.append(Slime(random.randrange(0,800), random.randrange(0, 500), self))
 
 		# self.sprites.append(Border(50, 50)) # Use as an invisible border on top of tile maps. Experimental.
 
@@ -79,20 +80,20 @@ class Model():
 			return False
 		if a.y + a.hitboxTop +(a.h + a.hitboxH) < b.y + b.hitboxTop: # assumes bigger is downward
 			return False
-		if a.y + a.hitboxTop > b.y + b.hitboxTop +(b.h + b.hitboxH): # assumes bigger is downward
+		if a.y + a.hitboxTop > b.y + b.hitboxTop + (b.h + b.hitboxH): # assumes bigger is downward
 			return False
 		
 		return True
 		
-	def SpriteClicked(self,s, mouse_x, mouse_y):
+	def spriteClicked(self,s, mouse_x, mouse_y):
 		clicked = True
-		if mouse_x < s.x:
+		if mouse_x < s.x + s.hitboxLeft:
 			clicked = False	
-		if mouse_x  > s.x + 55:
+		if mouse_x  > s.x + s.hitboxLeft + (s.w + s.hitboxW):
 			clicked = False
-		if mouse_y < s.y:
+		if mouse_y < s.y + s.hitboxTop:
 			clicked = False
-		if mouse_y > s.y + 400:
+		if mouse_y > s.y + s.hitboxTop + (s.h + s.hitboxH):
 			clicked = False
 		return clicked
 	

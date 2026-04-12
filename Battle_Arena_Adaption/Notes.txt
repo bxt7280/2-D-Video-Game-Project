@@ -26,6 +26,8 @@ Goals
 
 - Find a way to save current list of sprites using JSON
 
+- Make fixed camera so character is always in the center
+
 TODAY'S GOALS
 
 
