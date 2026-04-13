@@ -29,6 +29,11 @@ class MainCharacter(Sprite):
 		self.lightningAttackOn = False
 		self.autoFireballCooldown = 0
 		self.autoFireballAttackOn = False 
+		self.direction = Direction.UP
+		self.model = model
+		self.pulsateRed = False
+		self.hp = 300
+		self.maxHp = self.hp
 		
 		# Collision/Hitbox parameters
 		self.hitboxLeft = 105
@@ -36,8 +41,7 @@ class MainCharacter(Sprite):
 		self.hitboxW = -210
 		self.hitboxH = -135
 
-		self.direction = Direction.UP
-		self.model = model
+
 		
 		# Load all SpriteSheets
 		# Walk SpriteSheets
@@ -224,18 +228,24 @@ class MainCharacter(Sprite):
 			self.y = 0 - self.hitboxTop
 
 	def collideWithSprite(self, sprite):
-		# In the sprite, but previously on left hand side of the sprite
-		if self.x + self.hitboxLeft + (self.w + self.hitboxW) >= sprite.x + sprite.hitboxLeft and self.px + self.hitboxLeft + (self.w + self.hitboxW) <= sprite.x + sprite.hitboxLeft:
-			self.x = sprite.x + sprite.hitboxLeft - self.hitboxLeft	- (self.w + self.hitboxW)	
-		# In the sprite, but previously on right hand side of the sprite
-		if self.x + self.hitboxLeft <= sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW) and self.px + self.hitboxLeft >= sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW):
-			self.x = sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW) - self.hitboxLeft
-		# In the sprite, but previously above the sprite
-		if self.y + self.hitboxTop +(self.h + self.hitboxH) >= sprite.y + sprite.hitboxTop and self.py + self.hitboxTop + (self.h + self.hitboxH) <= sprite.y + sprite.hitboxTop:
-			self.y = sprite.y + sprite.hitboxTop - self.hitboxTop - (self.h + self.hitboxH)
-		# In the sprite, but previously below the sprite
-		if self.y + self.hitboxTop <= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) and self.py + self.hitboxTop >= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH):
-			self.y = sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) - self.hitboxTop
+		if isinstance(sprite, Slime):
+			self.pulsateRed = True
+			if self.hp > 0:
+				self.hp -= 1
+
+		# ORIGINAL BOARDER COLLISION
+		# # In the sprite, but previously on left hand side of the sprite
+		# if self.x + self.hitboxLeft + (self.w + self.hitboxW) >= sprite.x + sprite.hitboxLeft and self.px + self.hitboxLeft + (self.w + self.hitboxW) <= sprite.x + sprite.hitboxLeft:
+		# 	self.x = sprite.x + sprite.hitboxLeft - self.hitboxLeft	- (self.w + self.hitboxW)	
+		# # In the sprite, but previously on right hand side of the sprite
+		# if self.x + self.hitboxLeft <= sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW) and self.px + self.hitboxLeft >= sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW):
+		# 	self.x = sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW) - self.hitboxLeft
+		# # In the sprite, but previously above the sprite
+		# if self.y + self.hitboxTop +(self.h + self.hitboxH) >= sprite.y + sprite.hitboxTop and self.py + self.hitboxTop + (self.h + self.hitboxH) <= sprite.y + sprite.hitboxTop:
+		# 	self.y = sprite.y + sprite.hitboxTop - self.hitboxTop - (self.h + self.hitboxH)
+		# # In the sprite, but previously below the sprite
+		# if self.y + self.hitboxTop <= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) and self.py + self.hitboxTop >= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH):
+		# 	self.y = sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) - self.hitboxTop
 		
 	def savePreviousCoordinates(self):
 		self.px = self.x

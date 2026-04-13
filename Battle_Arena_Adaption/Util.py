@@ -37,4 +37,15 @@ class SpriteSheet:
 	def draw(self, surface, cellIndex, x, y, handle = 0):
 		surface.blit(self.sheet, (x + self.handle[handle][0] , y + self.handle[handle][1]), self.cells[cellIndex])
 
+	# Used to create red pulsating effect
+	def drawWithAlpha(self, surface, cellIndex, x, y, handle = 0, alpha = 255):
+		# Create red silhouette
+		sheetMask = pygame.mask.from_surface(self.sheet)
+		redSilhouette = sheetMask.to_surface(setcolor="red", unsetcolor=None)
+		surface.blit(redSilhouette, (x + self.handle[handle][0] , y + self.handle[handle][1]), self.cells[cellIndex])
+		
+		copyOfSheet = self.sheet.copy()
+		copyOfSheet.set_alpha(alpha)
+		surface.blit(copyOfSheet, (x + self.handle[handle][0] , y + self.handle[handle][1]), self.cells[cellIndex])
+
 

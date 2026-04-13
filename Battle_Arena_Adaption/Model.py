@@ -62,6 +62,9 @@ class Model():
 					if sprite2 != sprite:
 						if self.contactWithSprite(sprite, sprite2): 
 							sprite.collideWithSprite(sprite2)
+						elif isinstance(sprite, MainCharacter):
+							self.mainCharacter.pulsateRed = False							
+
 
 	def addBufferedSprites(self):
 		self.sprites.extend(self.spriteListBuffer)

@@ -26,7 +26,7 @@ class Controller():
 				if self.spriteSelectorOn:
 					if event.key == K_RETURN:
 						self.spriteSelectorOn = False
-						self.view.displayText = False
+						self.view.displayTextSpriteSelect = False
 						print("Sprite Select Off")
 						if self.view.user_text in dictOfSpriteClasses.keys():
 							print("Sprite Changed")
@@ -53,7 +53,7 @@ class Controller():
 						self.editorToggle = not(self.editorToggle)
 					if event.key == K_s:
 						self.spriteSelectorOn = True
-						self.view.displayText = True
+						self.view.displayTextSpriteSelect = True
 						print("Sprite Select On")
 
 			# Map Editor Mode
