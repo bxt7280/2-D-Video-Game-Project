@@ -4,7 +4,7 @@ from Sprites import MainCharacter, Border, Slime
 class View():
 	def __init__(self, model):
 		# Determine screen size
-		self.screen_size = (800, 800)
+		self.screen_size = (1200, 800)
 		self.screen = pygame.display.set_mode(self.screen_size, 32)
 		self.model = model
 		# Pass screen size into instance of model
@@ -28,9 +28,10 @@ class View():
 			text_surface = self.base_font.render("Sprite Type: " + self.user_text, True, (255,255,255))
 			self.screen.blit(text_surface,(0,0))
 		
-		playerHP = str(round(self.model.mainCharacter.hp/self.model.mainCharacter.maxHp * 100, 2))	
-		playerHpSurface = self.base_font.render("HP: " + playerHP, True, (255,255,255))
-		self.screen.blit(playerHpSurface,(700, 0))
+
+
+		self.drawHealthBar()
+
 		pygame.display.flip()
 
 	def drawSprites(self):
@@ -66,3 +67,21 @@ class View():
 				self.alphaDirectionSwitch = True
 			else:
 				self.currentAlpha += 10
+
+	def drawHealthBar(self):
+		playerHP = round(self.model.mainCharacter.hp/self.model.mainCharacter.maxHp * 100, 2)	
+		playerHpSurface = self.base_font.render("Life: " + str(playerHP) + "%", True, (255,255,255))
+		self.screen.blit(playerHpSurface,(self.screen_size[0] - 200, 0))
+
+		pygame.draw.rect(self.screen, "white", (self.screen_size[0] - 200, self.screen_size[1] - 778, 200, 36), 2)
+		pygame.draw.rect(self.screen, "black", (self.screen_size[0] - 200 + 2, self.screen_size[1] - 778 + 2, 196, 32), 2)	
+		pygame.draw.rect(self.screen, "#CC0000", (self.screen_size[0] - 200 + 4, self.screen_size[1] - 778 + 4, 192 * (playerHP/100), 28))
+		# pygame.draw.rect(self.screen, "#990000", (self.screen_size[0] - 200 + 4, self.screen_size[1] - 778 + 4, 192 * (playerHP/100), 3))
+		# pygame.draw.rect(self.screen, "white", (self.screen_size[0] - 200 + 4, self.screen_size[1] - 778 + 12, 192 * (playerHP/100), 6))
+		
+		
+		
+		#pygame.draw.rect(self.screen, "#CC0000", (self.screen_size[0] - 200 + 2, self.screen_size[1] - 778 + 2, 196 * (playerHP/100), 32))
+
+		
+		

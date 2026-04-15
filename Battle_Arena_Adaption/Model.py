@@ -62,9 +62,13 @@ class Model():
 					if sprite2 != sprite:
 						if self.contactWithSprite(sprite, sprite2): 
 							sprite.collideWithSprite(sprite2)
-						elif isinstance(sprite, MainCharacter):
-							self.mainCharacter.pulsateRed = False							
-
+	
+		# mainCharacter will pulsate red if at least one collision
+		if self.mainCharacter.collisionCount <= 0:
+			self.mainCharacter.pulsateRed = False
+		else:
+			self.mainCharacter.pulsateRed = True
+					
 
 	def addBufferedSprites(self):
 		self.sprites.extend(self.spriteListBuffer)

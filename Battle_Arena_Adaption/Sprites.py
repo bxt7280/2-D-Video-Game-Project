@@ -31,6 +31,7 @@ class MainCharacter(Sprite):
 		self.autoFireballAttackOn = False 
 		self.direction = Direction.UP
 		self.model = model
+		self.collisionCount = 0
 		self.pulsateRed = False
 		self.hp = 300
 		self.maxHp = self.hp
@@ -72,6 +73,9 @@ class MainCharacter(Sprite):
 		self.distVector = pygame.math.Vector2(self.x, self.y)
 		
 	def update(self):
+		# Reset number of collisions
+		self.collisionCount = 0
+
 		# Update distVector to save current coordinates
 		self.distVector.x = self.x + self.hitboxLeft
 		self.distVector.y = self.y + self.hitboxTop
@@ -229,7 +233,7 @@ class MainCharacter(Sprite):
 
 	def collideWithSprite(self, sprite):
 		if isinstance(sprite, Slime):
-			self.pulsateRed = True
+			self.collisionCount += 1
 			if self.hp > 0:
 				self.hp -= 1
 
