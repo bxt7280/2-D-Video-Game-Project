@@ -1,5 +1,5 @@
 import pygame
-from Sprites import MainCharacter, Border, Slime
+from Sprites import MainCharacter, Border, Slime, FlyingSword
 
 class View():
 	def __init__(self, model):
@@ -20,16 +20,15 @@ class View():
 		self.currentAlpha = 255
 		self.alphaDirectionSwitch = True
 
-	def update(self):    
-		self.screen.fill([0,200,100])
-		self.screen.blit(self.background, (0, 0))
+	def update(self):   
+		self.screen.fill("black") 
+		#self.screen.fill([0,200,100])
+		#self.screen.blit(self.background, (0, 0))
 		self.drawSprites()
 		if self.displayTextSpriteSelect:	
 			text_surface = self.base_font.render("Sprite Type: " + self.user_text, True, (255,255,255))
 			self.screen.blit(text_surface,(0,0))
 		
-
-
 		self.drawHealthBar()
 
 		pygame.display.flip()
@@ -40,8 +39,11 @@ class View():
 				if isinstance(sprite, MainCharacter) and self.model.mainCharacter.pulsateRed == True :
 					self.assignCurrentAlpha()
 					sprite.currentSpriteSheet.drawWithAlpha(self.screen, sprite.currentSpriteCellIndex, sprite.x, sprite.y, 0, self.currentAlpha)
+				elif isinstance(sprite, FlyingSword):
+					sprite.draw(self.screen)
 				else:
 					sprite.currentSpriteSheet.draw(self.screen, sprite.currentSpriteCellIndex, sprite.x, sprite.y)
+				
 				
 				if self.model.mainCharacter.pulsateRed == False:
 					self.currentAlpha = 255
@@ -49,8 +51,8 @@ class View():
 			if self.model.hitBoxModeOn:
 				pygame.draw.rect(self.screen, "red", (sprite.x + sprite.hitboxLeft, sprite.y + sprite.hitboxTop , 
 								 sprite.w + sprite.hitboxW, sprite.h + sprite.hitboxH), 1)
-				# pygame.draw.rect(self.screen, "black", (sprite.x , sprite.y  , 
-				#  				 sprite.w,sprite.h ), 1)
+				pygame.draw.rect(self.screen, "black", (sprite.x , sprite.y  , 
+				  				 sprite.w,sprite.h ), 1)
 				
 				if isinstance(sprite, Slime):
 					pygame.draw.line(self.screen, "black", sprite.distVector, self.model.mainCharacter.distVector)
@@ -78,9 +80,7 @@ class View():
 		pygame.draw.rect(self.screen, "#CC0000", (self.screen_size[0] - 200 + 4, self.screen_size[1] - 778 + 4, 192 * (playerHP/100), 28))
 		# pygame.draw.rect(self.screen, "#990000", (self.screen_size[0] - 200 + 4, self.screen_size[1] - 778 + 4, 192 * (playerHP/100), 3))
 		# pygame.draw.rect(self.screen, "white", (self.screen_size[0] - 200 + 4, self.screen_size[1] - 778 + 12, 192 * (playerHP/100), 6))
-		
-		
-		
+				
 		#pygame.draw.rect(self.screen, "#CC0000", (self.screen_size[0] - 200 + 2, self.screen_size[1] - 778 + 2, 196 * (playerHP/100), 32))
 
 		

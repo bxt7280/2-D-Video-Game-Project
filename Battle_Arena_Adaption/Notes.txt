@@ -28,9 +28,19 @@ Goals
 
 - Make fixed camera so character is always in the center
 
+- Make sure map editor can be toggled on/off
+
 TODAY'S GOALS
 
-
+- Flying Swords
+    - Generate swords via mainCharacter class
+        - implement toggle
+        - Swords don't disapear all at once(LOOK AT LATER?)
+    - Make single image for slime when using mask collision detection
+    - Make swords pulsate green
+    - Make swords move in and out/Make swords float
+    - univerallize draw method to keep view from getting cluttered
+    - move pulsate red implementation to main character class    
 
 
 

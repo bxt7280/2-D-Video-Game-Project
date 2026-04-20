@@ -1,6 +1,7 @@
 import pygame
 import os
 import random
+import math
 from Util import Direction, SpriteSheet
 
 class Sprite():
@@ -29,6 +30,8 @@ class MainCharacter(Sprite):
 		self.lightningAttackOn = False
 		self.autoFireballCooldown = 0
 		self.autoFireballAttackOn = False 
+		self.flyingSwordsAttackOn = False
+		self.listOfActiveSwords = []
 		self.direction = Direction.UP
 		self.model = model
 		self.collisionCount = 0
@@ -41,8 +44,6 @@ class MainCharacter(Sprite):
 		self.hitboxTop = 47
 		self.hitboxW = -210
 		self.hitboxH = -135
-
-
 		
 		# Load all SpriteSheets
 		# Walk SpriteSheets
@@ -90,9 +91,16 @@ class MainCharacter(Sprite):
 		# Auto fireball update
 		if self.autoFireballAttackOn == True:
 			if self.autoFireballCooldown > 0:
-				self.autoFireballCooldown -= 1
-				
+				self.autoFireballCooldown -= 1			
 			self.autoFireball()
+
+		# Flying swords update
+		if self.flyingSwordsAttackOn == True and len(self.listOfActiveSwords) == 0:
+			self.flyingSwordsAttack()
+		elif self.flyingSwordsAttackOn == False:
+			for sword in self.listOfActiveSwords:
+				sword.isActive = False
+			self.listOfActiveSwords.clear()
 
 	def animateIdle(self):
 		match(self.direction):
@@ -216,7 +224,6 @@ class MainCharacter(Sprite):
 			case _:
 				self.currentSpriteCellIndex = 0
 			
-
 	def collideWithBorder(self, screenSize):
 		# Past the border, but previously on left hand side of the border
 		if self.x + self.hitboxLeft + (self.w + self.hitboxW) >= screenSize[0] and self.px + self.hitboxLeft + (self.w + self.hitboxW) <= screenSize[0]:
@@ -392,6 +399,17 @@ class MainCharacter(Sprite):
 						closestSlimeIndex = i
 
 				self.model.sprites.append(HomingFireball(self.x + self.hitboxLeft, self.y + self.hitboxTop, self.model, listOfSlimes[closestSlimeIndex]))
+
+	def flyingSwordsAttack(self):
+		self.listOfActiveSwords.append(FlyingSword(self.x + self.hitboxLeft + ((self.w + self.hitboxW) / 2),
+											       self.y + self.hitboxTop + ((self.h + self.hitboxH) / 2), 0, 130, self.model))
+		self.listOfActiveSwords.append(FlyingSword(self.x + self.hitboxLeft + ((self.w + self.hitboxW) / 2),
+											       self.y + self.hitboxTop + ((self.h + self.hitboxH) / 2), 90, 130, self.model))
+		self.listOfActiveSwords.append(FlyingSword(self.x + self.hitboxLeft + ((self.w + self.hitboxW) / 2), 
+											       self.y + self.hitboxTop + ((self.h + self.hitboxH) / 2), 180, 130, self.model))
+		self.listOfActiveSwords.append(FlyingSword(self.x + self.hitboxLeft + ((self.w + self.hitboxW) / 2), 
+											       self.y + self.hitboxTop + ((self.h + self.hitboxH) / 2), 270, 130, self.model))
+		self.model.spriteListBuffer.extend(self.listOfActiveSwords)
 
 class Fireball(Sprite):
 	def __init__(self, xPos, yPos, direction, model):
@@ -645,6 +663,9 @@ class Slime(Sprite):
 		self.isHurtCounter = 0
 		self.isDying = False
 		self.deathCounter = 0
+
+		# Experiment with mask collision
+		self.image = pygame.image.load("./Images/fireball/fireball.png")
 		
 
 		# Save original position as vector
@@ -761,6 +782,16 @@ class Slime(Sprite):
 			if self.y + self.hitboxTop <= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) and self.py + self.hitboxTop >= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH):
 				self.y = sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) - self.hitboxTop
 
+	# Experiment with mask collision
+	def maskCollideWithSprite(self, sprite):
+		if isinstance(sprite, FlyingSword) and self.isDying == False: # Eventually change to sprite category rather than Fireballs specifically		
+			self.isHurt = True
+			self.isHurtCounter = 20
+			self.provoked = True
+			self.provokedCounter = 150
+			self.isDying = True
+			self.deathCounter = 20
+
 	def hitByLightning(self):
 		self.model.spriteListBuffer.append(LightningBolt(self.x - 34, self.y - 220 , self.model))
 		self.isHurt = True
@@ -774,6 +805,87 @@ class Slime(Sprite):
 	def savePreviousCoordinates(self):
 		self.px = self.x
 		self.py = self.y
+
+class FlyingSword(Sprite):
+	def __init__(self, xPos, yPos, startingAngle, lengthFromPivot, model):
+		super(FlyingSword, self).__init__(xPos, yPos, 124, 23, False, True)
+		self.px = 0
+		self.py = 0
+		self.borderRect = pygame.Rect(xPos, yPos, 124, 23)
+		self.currentAlpha = 255
+		self.alphaDirectionSwitch = True
+		self.model = model
+
+		self.lengthFromPivot = lengthFromPivot
+		self.startingAngle = startingAngle
+
+		self.pivot = pygame.Vector2(xPos, yPos)
+		self.angle = 0
+
+		self.offset = pygame.Vector2()
+		self.offset.from_polar((lengthFromPivot, -self.startingAngle))
+
+		self.pos = self.pivot + self.offset
+
+		if "flyingSword" not in self.model.dictOfSingleImages.keys():
+			self.model.dictOfSingleImages["flyingSword"] = pygame.image.load("./Images/flyingSword/flyingSword.png")
+		
+		self.imageOrig = self.model.dictOfSingleImages["flyingSword"] 
+		self.image = self.imageOrig
+
+		self.modifiedImage = pygame.transform.rotate(self.image, startingAngle)
+
+		self.image, self.rect = self.rotate_on_pivot(self.modifiedImage, self.angle, self.pivot, self.pos)
+		
+	def update(self):
+		self.angle += 4
+		self.pivot = pygame.Vector2(self.model.mainCharacter.x + self.model.mainCharacter.hitboxLeft + ((self.model.mainCharacter.w + self.model.mainCharacter.hitboxW) / 2), self.model.mainCharacter.y + self.model.mainCharacter.hitboxTop + ((self.model.mainCharacter.h + self.model.mainCharacter.hitboxH) / 2))
+		self.offset = pygame.Vector2()
+		self.offset.from_polar((self.lengthFromPivot, -self.startingAngle))
+		self.pos = self.pivot + self.offset
+
+		self.image, self.rect = self.rotate_on_pivot(self.modifiedImage, self.angle, self.pivot, self.pos)
+		
+		self.x = self.rect.x
+		self.y = self.rect.y
+
+	def draw(self, surface):
+		# pygame.draw.line(surface, 'darkgray', self.pivot, self.rect.center, width = 3)
+		# pygame.draw.line(surface, 'black', self.pivot, self.rect.center)
+		mask = pygame.mask.from_surface(self.image)
+		greenSilhouette = mask.to_surface(setcolor="green", unsetcolor=None)
+		surface.blit(greenSilhouette, self.rect)
+		
+		self.assignCurrentAlpha()
+		self.image.set_alpha(self.currentAlpha)
+		surface.blit(self.image, self.rect)
+
+	def collideWithSprite(self, sprite):
+		pass	
+
+	def savePreviousCoordinates(self):
+		self.px = self.x
+		self.py = self.y
+
+	def assignCurrentAlpha(self):
+		if self.alphaDirectionSwitch == True:
+			if self.currentAlpha <= 100:
+				self.alphaDirectionSwitch = False
+			else:
+				self.currentAlpha -= 5
+		else:
+			if self.currentAlpha >= 255:
+				self.alphaDirectionSwitch = True
+			else:
+				self.currentAlpha += 5
+
+	def rotate_on_pivot(self, image, angle, pivot, origin):	
+		surf = pygame.transform.rotate(image, angle)
+		
+		offset = pivot + (origin - pivot).rotate(-angle)
+		rect = surf.get_rect(center = offset)
+		
+		return surf, rect
 
 # Imageless sprite used for invisible boundaries
 class Border(Sprite):

@@ -47,8 +47,12 @@ class Controller():
 					# Lightning Mode ON/OFF
 					if event.key == K_SPACE:
 						self.model.mainCharacter.lightningAttackOn = not self.model.mainCharacter.lightningAttackOn
+					# Auto Fireball ON/OFF
 					if event.key == K_f:
 						self.model.mainCharacter.autoFireballAttackOn = not self.model.mainCharacter.autoFireballAttackOn 
+					# Flying Swords ON/OFF
+					if event.key == K_a:
+						self.model.mainCharacter.flyingSwordsAttackOn = not self.model.mainCharacter.flyingSwordsAttackOn	
 					if event.key == K_m:
 						self.editorToggle = not(self.editorToggle)
 					if event.key == K_s:

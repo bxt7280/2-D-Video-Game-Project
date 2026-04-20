@@ -4,6 +4,7 @@ from Sprites import *
 class Model():
 	def __init__(self):
 		self.dictOfSpriteSheets = {} 
+		self.dictOfSingleImages = {}
 		self.sprites = [] # Main list of sprites
 		self.spriteListBuffer = [] # List of sprites that need to be added to main sprite list
 		self.mainCharacter = MainCharacter(400, 800, self) 		
@@ -13,11 +14,11 @@ class Model():
 		# Toggle Hitbox mode on/off
 		self.hitBoxModeOn = False
 
-		slimeClass = Slime
-		testSlime = slimeClass(200, 350, self)
-		self.sprites.append(testSlime)
+		# slimeClass = Slime
+		# testSlime = slimeClass(200, 350, self)
+		# self.sprites.append(testSlime)
 		# self.sprites.append(HomingFireball(700, 700, self, testSlime))
-		# self.sprites.append(Slime(600, 100, self))
+
 
 		# for i in range(30):
 		# 	self.sprites.append(Slime(random.randrange(0,800), random.randrange(0, 500), self))
@@ -60,8 +61,14 @@ class Model():
 			if sprite.canCollideWithSprite:
 				for sprite2 in self.sprites:
 					if sprite2 != sprite:
-						if self.contactWithSprite(sprite, sprite2): 
-							sprite.collideWithSprite(sprite2)
+						# Experiment with mask collision
+						if isinstance(sprite, Slime) and isinstance(sprite2, FlyingSword):
+							if self.maskContactWithSprite(sprite, sprite2):
+								sprite.maskCollideWithSprite(sprite2)
+						else:
+							if self.contactWithSprite(sprite, sprite2): 
+								sprite.collideWithSprite(sprite2)
+						
 	
 		# mainCharacter will pulsate red if at least one collision
 		if self.mainCharacter.collisionCount <= 0:
@@ -91,6 +98,15 @@ class Model():
 			return False
 		
 		return True
+	
+	def maskContactWithSprite(self, a, b):
+		maskA = pygame.mask.from_surface(a.image)
+		maskB = pygame.mask.from_surface(b.image)
+
+		if maskA.overlap(maskB, (b.x - a.x, b.y - a.y)):
+			return True
+		else:
+			return False
 		
 	def spriteClicked(self,s, mouse_x, mouse_y):
 		clicked = True
@@ -113,3 +129,4 @@ class Model():
 	# Set Screen Size. Set when view is initialized.
 	def setScreenSize(self, size):
 		self.screenSize = size
+
