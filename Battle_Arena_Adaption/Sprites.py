@@ -72,6 +72,10 @@ class MainCharacter(Sprite):
 
 		# Create a vector to determine distance between sprites
 		self.distVector = pygame.math.Vector2(self.x, self.y)
+
+		# For red pulsating effect on mainCharacter
+		self.currentAlpha = 255
+		self.alphaDirectionSwitch = True
 		
 	def update(self):
 		# Reset number of collisions
@@ -101,6 +105,28 @@ class MainCharacter(Sprite):
 			for sword in self.listOfActiveSwords:
 				sword.isActive = False
 			self.listOfActiveSwords.clear()
+
+	def draw(self, screen):
+		if self.pulsateRed == True:
+			self.assignCurrentAlpha()
+			self.currentSpriteSheet.drawWithAlpha(screen, self.currentSpriteCellIndex, self.x, self.y, 0, self.currentAlpha)
+		else:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x, self.y)
+
+		if self.model.mainCharacter.pulsateRed == False:
+			self.currentAlpha = 255
+
+	def assignCurrentAlpha(self):
+		if self.alphaDirectionSwitch == True:
+			if self.currentAlpha <= 155:
+				self.alphaDirectionSwitch = False
+			else:
+				self.currentAlpha -= 10
+		else:
+			if self.currentAlpha >= 255:
+				self.alphaDirectionSwitch = True
+			else:
+				self.currentAlpha += 10
 
 	def animateIdle(self):
 		match(self.direction):
@@ -244,8 +270,8 @@ class MainCharacter(Sprite):
 			if self.hp > 0:
 				self.hp -= 1
 
-		# ORIGINAL BOARDER COLLISION
-		# # In the sprite, but previously on left hand side of the sprite
+		# ORIGINAL SPRITE COLLISION
+		# In the sprite, but previously on left hand side of the sprite
 		# if self.x + self.hitboxLeft + (self.w + self.hitboxW) >= sprite.x + sprite.hitboxLeft and self.px + self.hitboxLeft + (self.w + self.hitboxW) <= sprite.x + sprite.hitboxLeft:
 		# 	self.x = sprite.x + sprite.hitboxLeft - self.hitboxLeft	- (self.w + self.hitboxW)	
 		# # In the sprite, but previously on right hand side of the sprite
@@ -431,6 +457,9 @@ class Fireball(Sprite):
 	def update(self):
 		self.moveFireball()
 		
+	def draw(self, screen):
+		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x, self.y)
+
 	# Changes direction. If invaild input defaults to "NEUTRAL" Currently Not Used. Might use to bounce off walls.
 	def changeDirection(self, direction):
 		match direction:
@@ -540,6 +569,9 @@ class HomingFireball(Sprite):
 		else:
 			self.explode()
 			self.isActive = False
+
+	def draw(self, screen):
+		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x, self.y)
 		
 	def collideWithBorder(self, screenSize):
 		# Past the border, but previously on left hand side of the border
@@ -588,6 +620,9 @@ class FireballExplosion(Sprite):
 		
 	def update(self):
 		self.animate()
+
+	def draw(self, screen):
+		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x, self.y)
 		
 	def animate(self):
 		self.currentSpriteCellIndex += 1
@@ -614,6 +649,9 @@ class LightningBolt(Sprite):
 		
 	def update(self):
 		self.animate()
+
+	def draw(self, screen):
+		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x, self.y)
 		
 	def animate(self):
 		self.currentSpriteCellIndex += 1
@@ -624,7 +662,6 @@ class LightningBolt(Sprite):
 			
 		if self.animateDuration == 0:
 			self.isActive = False
-
 
 class BloodSplatter(Sprite):
 	def __init__(self, xPos, yPos, model):
@@ -643,6 +680,9 @@ class BloodSplatter(Sprite):
 		
 	def update(self):
 		self.animate()
+
+	def draw(self, screen):
+		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x, self.y)
 		
 	def animate(self):
 		self.currentSpriteCellIndex += 1
@@ -664,10 +704,9 @@ class Slime(Sprite):
 		self.isDying = False
 		self.deathCounter = 0
 
-		# Experiment with mask collision
-		self.image = pygame.image.load("./Images/fireball/fireball.png")
+		# Single image used for mask collision
+		self.image = pygame.image.load("./Images/slimeSingleImage.png")
 		
-
 		# Save original position as vector
 		self.originalPos = pygame.math.Vector2(self.x, self.y)
 	
@@ -683,8 +722,7 @@ class Slime(Sprite):
 		
 		self.frameDelayCounter = 2 # slow down rate of animation
 
-		self.distVector = pygame.math.Vector2(self.x, self.y)
-
+		self.distVector = pygame.math.Vector2(self.x, self.y) # Vector used to follow mainCharacter
 
 	def update(self):
 		# Update distance vector
@@ -722,6 +760,9 @@ class Slime(Sprite):
 			self.deathCounter -= 1
 
 		self.animate()	
+
+	def draw(self, screen):
+		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x, self.y)
 		
 	def animate(self):
 		if self.isHurt == True and self.isHurtCounter > 0:
@@ -760,7 +801,7 @@ class Slime(Sprite):
 			self.y = 0 - self.hitboxTop
 
 	def collideWithSprite(self, sprite):
-		if isinstance(sprite, Fireball) or isinstance(sprite, HomingFireball) and self.isDying == False: # Eventually change to sprite category rather than Fireballs specifically		
+		if isinstance(sprite, Fireball) or isinstance(sprite, HomingFireball) and self.isDying == False: 		
 			self.isHurt = True
 			self.isHurtCounter = 20
 			self.provoked = True
@@ -784,7 +825,7 @@ class Slime(Sprite):
 
 	# Experiment with mask collision
 	def maskCollideWithSprite(self, sprite):
-		if isinstance(sprite, FlyingSword) and self.isDying == False: # Eventually change to sprite category rather than Fireballs specifically		
+		if isinstance(sprite, FlyingSword) and self.isDying == False: 	
 			self.isHurt = True
 			self.isHurtCounter = 20
 			self.provoked = True
@@ -850,8 +891,6 @@ class FlyingSword(Sprite):
 		self.y = self.rect.y
 
 	def draw(self, surface):
-		# pygame.draw.line(surface, 'darkgray', self.pivot, self.rect.center, width = 3)
-		# pygame.draw.line(surface, 'black', self.pivot, self.rect.center)
 		mask = pygame.mask.from_surface(self.image)
 		greenSilhouette = mask.to_surface(setcolor="green", unsetcolor=None)
 		surface.blit(greenSilhouette, self.rect)
@@ -893,7 +932,7 @@ class Border(Sprite):
 		super(Border, self).__init__(xPos, yPos, 50, 50, False, False)
 		self.hitboxLeft = 0
 		self.hitboxTop = 0
-		self.hitboxW = 100
+		self.hitboxW = 0
 		self.hitboxH = 0
 	def update(self):
 		pass

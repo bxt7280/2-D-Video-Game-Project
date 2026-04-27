@@ -23,8 +23,8 @@ class Model():
 		# for i in range(30):
 		# 	self.sprites.append(Slime(random.randrange(0,800), random.randrange(0, 500), self))
 
-		# self.sprites.append(Border(50, 50)) # Use as an invisible border on top of tile maps. Experimental.
-
+		self.sprites.append(Border(50, 50)) # Use as an invisible border on top of tile maps. Experimental.
+		self.sprites.append(Border(100, 0))
 	def update(self):
 		# Update all sprites
 		self.updateAllSprites()
@@ -69,14 +69,12 @@ class Model():
 							if self.contactWithSprite(sprite, sprite2): 
 								sprite.collideWithSprite(sprite2)
 						
-	
 		# mainCharacter will pulsate red if at least one collision
 		if self.mainCharacter.collisionCount <= 0:
 			self.mainCharacter.pulsateRed = False
 		else:
 			self.mainCharacter.pulsateRed = True
 					
-
 	def addBufferedSprites(self):
 		self.sprites.extend(self.spriteListBuffer)
 		self.spriteListBuffer.clear()

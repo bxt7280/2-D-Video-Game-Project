@@ -1,12 +1,13 @@
 import pygame
-from Sprites import MainCharacter, Border, Slime, FlyingSword
+from Sprites import Border, Slime
 
 class View():
 	def __init__(self, model):
 		# Determine screen size
-		self.screen_size = (1200, 800)
+		self.screen_size = (800, 800)
 		self.screen = pygame.display.set_mode(self.screen_size, 32)
 		self.model = model
+
 		# Pass screen size into instance of model
 		self.model.setScreenSize(self.screen_size)
 		self.background = pygame.image.load("./Images/forestBackground.png")
@@ -21,9 +22,9 @@ class View():
 		self.alphaDirectionSwitch = True
 
 	def update(self):   
-		self.screen.fill("black") 
+		#self.screen.fill("black") 
 		#self.screen.fill([0,200,100])
-		#self.screen.blit(self.background, (0, 0))
+		self.screen.blit(self.background, (0, 0))
 		self.drawSprites()
 		if self.displayTextSpriteSelect:	
 			text_surface = self.base_font.render("Sprite Type: " + self.user_text, True, (255,255,255))
@@ -36,18 +37,8 @@ class View():
 	def drawSprites(self):
 		for sprite in self.model.sprites:
 			if not isinstance(sprite, Border):
-				if isinstance(sprite, MainCharacter) and self.model.mainCharacter.pulsateRed == True :
-					self.assignCurrentAlpha()
-					sprite.currentSpriteSheet.drawWithAlpha(self.screen, sprite.currentSpriteCellIndex, sprite.x, sprite.y, 0, self.currentAlpha)
-				elif isinstance(sprite, FlyingSword):
-					sprite.draw(self.screen)
-				else:
-					sprite.currentSpriteSheet.draw(self.screen, sprite.currentSpriteCellIndex, sprite.x, sprite.y)
-				
-				
-				if self.model.mainCharacter.pulsateRed == False:
-					self.currentAlpha = 255
-
+				sprite.draw(self.screen)
+	
 			if self.model.hitBoxModeOn:
 				pygame.draw.rect(self.screen, "red", (sprite.x + sprite.hitboxLeft, sprite.y + sprite.hitboxTop , 
 								 sprite.w + sprite.hitboxW, sprite.h + sprite.hitboxH), 1)
@@ -57,18 +48,6 @@ class View():
 				if isinstance(sprite, Slime):
 					pygame.draw.line(self.screen, "black", sprite.distVector, self.model.mainCharacter.distVector)
 					#print(sprite.distVector.distance_to(self.model.mainCharacter.distVector))
-
-	def assignCurrentAlpha(self):
-		if self.alphaDirectionSwitch == True:
-			if self.currentAlpha <= 155:
-				self.alphaDirectionSwitch = False
-			else:
-				self.currentAlpha -= 10
-		else:
-			if self.currentAlpha >= 255:
-				self.alphaDirectionSwitch = True
-			else:
-				self.currentAlpha += 10
 
 	def drawHealthBar(self):
 		playerHP = round(self.model.mainCharacter.hp/self.model.mainCharacter.maxHp * 100, 2)	

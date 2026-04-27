@@ -2,6 +2,14 @@ Goals
 - Find a way to load a map created with third party program
     - tiled program with csv
         - https://www.mapeditor.org/
+    - use pytmx library
+    - make a map class with instance of tmx_data
+    - make function to draw tiles
+    - experiment with collision and custom properties
+        - make a method that will return collidiable tiles as invisible sprites
+    - experiment with enemy placement via tiled. 
+        - make method that will add enemy sprites to main sprites list in model class
+
 
 - Add a way to classify different sprites such as main character, enemy_idle, enemy_attack, stationary, player_projectile, enemy_projectile
     - May make looping through sprites easier.
@@ -9,38 +17,41 @@ Goals
     - Also, - Make a "Can Collide List" in the Sprite class determining what type of sprites a certain sprite can collide with.
     - Start by writing all collision rules for each sprite  
 
-- Maybe make a class that saves all methods pertaining to sprite actions.
-    - For example, multiple sprites need save their coordinates. No reason to repeat code. 
+- find methods to add to sprite class that all sprites might use 
+    - SavePreviousCoordinates?
 
-- Find better way than ctrlKeyPressDelay variable in controller?
+*- Find better way than ctrlKeyPressDelay variable in controller?
     - could use events instead of keypress
 
-- find way to univerallize loading images into spritesheet?
+- find way to univerallize loading images into spritesheet? (make method for sprite class)
 
 - Is the contactWithBorder method in model even needed?
 
 - Perhaps change sprites x and y to vector
 
-- Work on code to add sprite to screen with mouse clicked
-    - Maybe take text input from user to determine what sprite to draw
+*- Work on code to add sprite to screen with mouse clicked
+    *- Maybe take text input from user to determine what sprite to draw
+
+- make method to print any text on screen. perhaps in the view
 
 - Find a way to save current list of sprites using JSON
 
 - Make fixed camera so character is always in the center
 
-- Make sure map editor can be toggled on/off
+- Clean up Controller class
+    - Make sure map editor can be toggled on/off
 
 TODAY'S GOALS
 
 - Flying Swords
-    - Generate swords via mainCharacter class
-        - implement toggle
+    *- Generate swords via mainCharacter class
+        *- implement toggle
         - Swords don't disapear all at once(LOOK AT LATER?)
-    - Make single image for slime when using mask collision detection
-    - Make swords pulsate green
+    *- Make single image for slime when using mask collision detection
+    *- Make swords pulsate green
     - Make swords move in and out/Make swords float
-    - univerallize draw method to keep view from getting cluttered
-    - move pulsate red implementation to main character class    
+    *- univerallize draw method to keep view from getting cluttered
+    *- move pulsate red implementation to main character class    
 
 
 
