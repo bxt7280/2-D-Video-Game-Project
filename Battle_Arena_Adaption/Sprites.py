@@ -49,21 +49,21 @@ class MainCharacter(Sprite):
 		# Walk SpriteSheets
 		self.model.dictOfSpriteSheets["girlWalkSpriteSheets"] = []
 		for fileName in os.listdir("./Images/Girl/GirlSample_Walk_256Update"):
-			self.model.dictOfSpriteSheets["girlWalkSpriteSheets"].append(SpriteSheet("./Images/Girl/GirlSample_Walk_256Update/" + fileName, 4, 3))
+			self.model.dictOfSpriteSheets["girlWalkSpriteSheets"].append(SpriteSheet("./Images/Girl/GirlSample_Walk_256Update/" + fileName, 4, 3, self.model.screen))
 
 		self.walkSpriteSheets = self.model.dictOfSpriteSheets["girlWalkSpriteSheets"]
 		
 		# Idle SpriteSheets
 		self.model.dictOfSpriteSheets["girlIdleSpriteSheets"] = []
 		for fileName in os.listdir("./Images/Girl/GirlSampleReadyIdle"):
-			self.model.dictOfSpriteSheets["girlIdleSpriteSheets"].append(SpriteSheet("./Images/Girl/GirlSampleReadyIdle/" + fileName, 4, 4))
+			self.model.dictOfSpriteSheets["girlIdleSpriteSheets"].append(SpriteSheet("./Images/Girl/GirlSampleReadyIdle/" + fileName, 4, 4, self.model.screen))
 
 		self.idleSpriteSheets = self.model.dictOfSpriteSheets["girlIdleSpriteSheets"]
 
 		# Throw fireball SpriteSheets
 		self.model.dictOfSpriteSheets["girlThrowFireSpriteSheets"] = []
 		for fileName in os.listdir("./Images/Girl/GirlSampleFireball"):
-			self.model.dictOfSpriteSheets["girlThrowFireSpriteSheets"].append(SpriteSheet("./Images/Girl/GirlSampleFireball/" + fileName, 4, 6))
+			self.model.dictOfSpriteSheets["girlThrowFireSpriteSheets"].append(SpriteSheet("./Images/Girl/GirlSampleFireball/" + fileName, 4, 6, self.model.screen))
 
 		self.throwFireSpriteSheets = self.model.dictOfSpriteSheets["girlThrowFireSpriteSheets"]
 
@@ -450,7 +450,7 @@ class Fireball(Sprite):
 		if "fireballSpriteSheets" not in self.model.dictOfSpriteSheets.keys():
 			self.model.dictOfSpriteSheets["fireballSpriteSheets"] = []
 			for fileName in os.listdir("./Images/fireball"):
-				self.model.dictOfSpriteSheets["fireballSpriteSheets"].append(SpriteSheet("./Images/fireball/" + fileName, 1, 1))
+				self.model.dictOfSpriteSheets["fireballSpriteSheets"].append(SpriteSheet("./Images/fireball/" + fileName, 1, 1, self.model.screen))
 
 		self.currentSpriteSheet = self.model.dictOfSpriteSheets["fireballSpriteSheets"][0]
 		
@@ -552,7 +552,7 @@ class HomingFireball(Sprite):
 		if "fireballSpriteSheets" not in self.model.dictOfSpriteSheets.keys():
 			self.model.dictOfSpriteSheets["fireballSpriteSheets"] = []
 			for fileName in os.listdir("./Images/fireball"):
-				self.model.dictOfSpriteSheets["fireballSpriteSheets"].append(SpriteSheet("./Images/fireball/" + fileName, 1, 1))
+				self.model.dictOfSpriteSheets["fireballSpriteSheets"].append(SpriteSheet("./Images/fireball/" + fileName, 1, 1, self.model.screen))
 
 		self.currentSpriteSheet = self.model.dictOfSpriteSheets["fireballSpriteSheets"][0]
 		
@@ -612,7 +612,7 @@ class FireballExplosion(Sprite):
 		if "fireballExplosionSpriteSheets" not in self.model.dictOfSpriteSheets.keys():
 			self.model.dictOfSpriteSheets["fireballExplosionSpriteSheets"] = []
 			for fileName in os.listdir("./Images/stylized_explosion_001_small_yellow"):
-				self.model.dictOfSpriteSheets["fireballExplosionSpriteSheets"].append(SpriteSheet("./Images/stylized_explosion_001_small_yellow/" + fileName, 9, 1))
+				self.model.dictOfSpriteSheets["fireballExplosionSpriteSheets"].append(SpriteSheet("./Images/stylized_explosion_001_small_yellow/" + fileName, 9, 1, self.model.screen))
 
 		self.explodeSpriteSheets = self.model.dictOfSpriteSheets["fireballExplosionSpriteSheets"]
 
@@ -641,7 +641,7 @@ class LightningBolt(Sprite):
 		if "lightningBoltSpriteSheets" not in self.model.dictOfSpriteSheets.keys():
 			self.model.dictOfSpriteSheets["lightningBoltSpriteSheets"] = []
 			for fileName in os.listdir("./Images/lightning"):
-				self.model.dictOfSpriteSheets["lightningBoltSpriteSheets"].append(SpriteSheet("./Images/lightning/" + fileName, 5, 1))
+				self.model.dictOfSpriteSheets["lightningBoltSpriteSheets"].append(SpriteSheet("./Images/lightning/" + fileName, 5, 1, self.model.screen))
 
 		self.lightningBoltSpriteSheets = self.model.dictOfSpriteSheets["lightningBoltSpriteSheets"]
 
@@ -672,7 +672,7 @@ class BloodSplatter(Sprite):
 		if "bloodSplatterSpriteSheets" not in self.model.dictOfSpriteSheets.keys():
 			self.model.dictOfSpriteSheets["bloodSplatterSpriteSheets"] = []
 			for fileName in os.listdir("./Images/bloodSplatter"):
-				self.model.dictOfSpriteSheets["bloodSplatterSpriteSheets"].append(SpriteSheet("./Images/bloodSplatter/" + fileName, 10, 1))
+				self.model.dictOfSpriteSheets["bloodSplatterSpriteSheets"].append(SpriteSheet("./Images/bloodSplatter/" + fileName, 10, 1, self.model.screen))
 
 		self.bloodSplatterSpriteSheets = self.model.dictOfSpriteSheets["bloodSplatterSpriteSheets"]
 
@@ -705,7 +705,11 @@ class Slime(Sprite):
 		self.deathCounter = 0
 
 		# Single image used for mask collision
-		self.image = pygame.image.load("./Images/slimeSingleImage.png")
+		if "slimeSingleImage" not in self.model.dictOfSingleImages.keys():
+			self.model.dictOfSingleImages["slimeSingleImage"] = pygame.image.load("./Images/slimeSingleImage.png").convert_alpha()
+			
+		self.image = self.model.dictOfSingleImages["slimeSingleImage"]
+		
 		
 		# Save original position as vector
 		self.originalPos = pygame.math.Vector2(self.x, self.y)
@@ -714,7 +718,7 @@ class Slime(Sprite):
 		if "slimeSpriteSheets" not in self.model.dictOfSpriteSheets.keys():
 			self.model.dictOfSpriteSheets["slimeSpriteSheets"] = []
 			for fileName in os.listdir("./Images/slime"):
-				self.model.dictOfSpriteSheets["slimeSpriteSheets"].append(SpriteSheet("./Images/slime/" + fileName, 5, 3))
+				self.model.dictOfSpriteSheets["slimeSpriteSheets"].append(SpriteSheet("./Images/slime/" + fileName, 5, 3, self.model.screen))
 
 		self.slimeSpriteSheets = self.model.dictOfSpriteSheets["slimeSpriteSheets"]
 
@@ -751,6 +755,8 @@ class Slime(Sprite):
 		# 	self.distVector.move_towards_ip(self.originalPos, 5)
 		# 	self.x = self.distVector.x
 		# 	self.y = self.distVector.y
+		
+		self.trackMainCharacter()
 
 		# Death if hit by lightning
 		if self.isDying == True:
@@ -763,6 +769,20 @@ class Slime(Sprite):
 
 	def draw(self, screen):
 		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x, self.y)
+
+	def trackMainCharacter(self):
+		self.distVector.move_towards_ip(self.model.mainCharacter.distVector, 2)
+	
+		listOfSlimes = [sprite for sprite in self.model.sprites if isinstance(sprite, Slime)]
+		numOfCollisions = 0
+		for slime in listOfSlimes:
+			if slime != self:
+				if self.model.contactWithSprite(Slime(self.distVector.x, self.distVector.y, self.model), slime):
+					numOfCollisions += 1
+
+		if numOfCollisions == 0:	
+			self.x = self.distVector.x
+			self.y = self.distVector.y
 		
 	def animate(self):
 		if self.isHurt == True and self.isHurtCounter > 0:
@@ -869,7 +889,7 @@ class FlyingSword(Sprite):
 		self.pos = self.pivot + self.offset
 
 		if "flyingSword" not in self.model.dictOfSingleImages.keys():
-			self.model.dictOfSingleImages["flyingSword"] = pygame.image.load("./Images/flyingSword/flyingSword.png")
+			self.model.dictOfSingleImages["flyingSword"] = pygame.image.load("./Images/flyingSword/flyingSword.png").convert_alpha()
 		
 		self.imageOrig = self.model.dictOfSingleImages["flyingSword"] 
 		self.image = self.imageOrig

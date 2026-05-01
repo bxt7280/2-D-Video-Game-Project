@@ -15,8 +15,9 @@ class Direction(Enum):
 
 # Automatically separates spritesheet into tiles and draws them on screen via index	
 class SpriteSheet:
-	def __init__(self, filename, cols, rows):
-		self.sheet = pygame.image.load(filename)
+	def __init__(self, filename, cols, rows, screen):
+		self.screen = screen
+		self.sheet = pygame.image.load(filename).convert_alpha()
 
 		self.cols = cols
 		self.rows = rows

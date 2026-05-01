@@ -1,16 +1,4 @@
 Goals
-- Find a way to load a map created with third party program
-    - tiled program with csv
-        - https://www.mapeditor.org/
-    - use pytmx library
-    - make a map class with instance of tmx_data
-    - make function to draw tiles
-    - experiment with collision and custom properties
-        - make a method that will return collidiable tiles as invisible sprites
-    - experiment with enemy placement via tiled. 
-        - make method that will add enemy sprites to main sprites list in model class
-
-
 - Add a way to classify different sprites such as main character, enemy_idle, enemy_attack, stationary, player_projectile, enemy_projectile
     - May make looping through sprites easier.
         - For example, not every sprite needs to save its previous Coordinates.
@@ -41,8 +29,6 @@ Goals
 - Clean up Controller class
     - Make sure map editor can be toggled on/off
 
-TODAY'S GOALS
-
 - Flying Swords
     *- Generate swords via mainCharacter class
         *- implement toggle
@@ -53,6 +39,22 @@ TODAY'S GOALS
     *- univerallize draw method to keep view from getting cluttered
     *- move pulsate red implementation to main character class    
 
+
+- Create Camera to follow Character
+
+TODAY'S GOALS
+- Find a way to load a map created with third party program
+    *- tiled program
+        - https://www.mapeditor.org/
+    *- use pytmx library
+    *- make a map class with instance of tmx_data
+    *- make function to draw tiles
+    - experiment with collision and custom properties
+        - make a method that will return collidiable tiles as invisible sprites
+    - experiment with enemy placement via tiled. 
+        - make method that will add enemy sprites to main sprites list in model class
+
+- Add camera and increase size of map
 
 
 

@@ -2,14 +2,15 @@ import random
 from Sprites import *
 
 class Model():
-	def __init__(self):
+	def __init__(self, screen, screenSize):
+		self.screenSize = screenSize
+		self.screen = screen
 		self.dictOfSpriteSheets = {} 
 		self.dictOfSingleImages = {}
 		self.sprites = [] # Main list of sprites
 		self.spriteListBuffer = [] # List of sprites that need to be added to main sprite list
 		self.mainCharacter = MainCharacter(400, 800, self) 		
 		self.sprites.append(self.mainCharacter)   
-		self.screenSize = 0
 
 		# Toggle Hitbox mode on/off
 		self.hitBoxModeOn = False
@@ -23,8 +24,8 @@ class Model():
 		# for i in range(30):
 		# 	self.sprites.append(Slime(random.randrange(0,800), random.randrange(0, 500), self))
 
-		self.sprites.append(Border(50, 50)) # Use as an invisible border on top of tile maps. Experimental.
-		self.sprites.append(Border(100, 0))
+		# self.sprites.append(Border(50, 50)) # Use as an invisible border on top of tile maps. Experimental.
+		# self.sprites.append(Border(100, 0))
 	def update(self):
 		# Update all sprites
 		self.updateAllSprites()
@@ -40,9 +41,7 @@ class Model():
 		self.addBufferedSprites()
 
 		# Clean up and remove all inactive or "dead" sprites
-		for sprite in self.sprites:
-			if sprite.isActive == False:
-				self.sprites.remove(sprite)
+		self.sprites = [sprite for sprite in self.sprites if sprite.isActive]
 
 		# Tell all applicable sprites to save their coordinates
 		self.universalSavePreviousCoordinates()
@@ -118,13 +117,9 @@ class Model():
 			clicked = False
 		return clicked
 	
-	# Saves coordinates of any sprite with collide capability
+	# Saves coordinates of any sprite that has collision detection
 	def universalSavePreviousCoordinates(self):	
 		for sprite in self.sprites:
 			if sprite.canCollideWithBorder or sprite.canCollideWithSprite:
 				sprite.savePreviousCoordinates()
-
-	# Set Screen Size. Set when view is initialized.
-	def setScreenSize(self, size):
-		self.screenSize = size
 

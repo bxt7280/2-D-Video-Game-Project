@@ -8,11 +8,12 @@ class Game():
 	def __init__(self):
 		print("Use the arrow keys to move. Press Esc to quit.")
 		pygame.init()
-
+		self.screen_size = (800, 800)
+		self.screen = pygame.display.set_mode(self.screen_size, 32)
 		self.clock = pygame.time.Clock()
 
-		self.m = Model()
-		self.v = View(self.m)
+		self.m = Model(self.screen, self.screen_size)
+		self.v = View(self.m, self.screen, self.screen_size)
 		self.c = Controller(self.m, self.v)
 		
 	def run(self):
@@ -21,7 +22,7 @@ class Game():
 			self.m.update()
 			self.v.update()
 			self.clock.tick(30)
-			#print(self.clock.get_fps())
+			print(self.clock.get_fps())
 			
 		print("Goodbye")
 

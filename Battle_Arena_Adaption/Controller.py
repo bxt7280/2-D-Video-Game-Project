@@ -21,6 +21,7 @@ class Controller():
 				sys.exit()
 			elif event.type == KEYDOWN:
 				if event.key == K_ESCAPE:
+					#print(len(self.model.sprites))
 					self.keepGoing = False
 
 				if self.spriteSelectorOn:
