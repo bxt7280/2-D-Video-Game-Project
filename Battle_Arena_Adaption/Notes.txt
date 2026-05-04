@@ -55,6 +55,19 @@ TODAY'S GOALS
         - make method that will add enemy sprites to main sprites list in model class
 
 - Add camera and increase size of map
+- turn character movement in controller into method?
+
+- Tighten Up Velle's health bar
+
+- Add buttons for spells
+    - Create button as own class.
+        - instance variables include image
+        - will have its own update method
+        - will glow a color if activated
+        - add text that will represent cooldown? or create bar above icon/button
+        - Turn greyscale if unable to cast? Make spell uncastable if activated too long? (ex. swords, and lightning)
+    - Have a list of buttons in view to be updated every frame
+    - Use sprite clicked logic to turn off and on
 
 
 

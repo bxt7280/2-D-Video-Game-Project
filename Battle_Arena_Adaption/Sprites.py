@@ -2,7 +2,7 @@ import pygame
 import os
 import random
 import math
-from Util import Direction, SpriteSheet
+from Util import Direction, SpriteSheet, camera
 
 class Sprite():
 	def __init__(self, xPos, yPos, w, h, canCollideWithBorder, canCollideWithSprite):
@@ -23,7 +23,7 @@ class Sprite():
 
 class MainCharacter(Sprite):
 	def __init__(self, xPos, yPos, model):
-		super(MainCharacter, self).__init__(xPos - 256/2, yPos - 256/2, 256, 256, True, True)
+		super(MainCharacter, self).__init__(xPos, yPos, 256, 256, True, True)
 		self.px = 0
 		self.py = 0
 		self.lightningAttackRecharge = 0
@@ -109,9 +109,9 @@ class MainCharacter(Sprite):
 	def draw(self, screen):
 		if self.pulsateRed == True:
 			self.assignCurrentAlpha()
-			self.currentSpriteSheet.drawWithAlpha(screen, self.currentSpriteCellIndex, self.x, self.y, 0, self.currentAlpha)
+			self.currentSpriteSheet.drawWithAlpha(screen, self.currentSpriteCellIndex, self.x - camera.x, self.y - camera.y, 0, self.currentAlpha)
 		else:
-			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x, self.y)
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - camera.x, self.y - camera.y)
 
 		if self.model.mainCharacter.pulsateRed == False:
 			self.currentAlpha = 255
@@ -458,7 +458,7 @@ class Fireball(Sprite):
 		self.moveFireball()
 		
 	def draw(self, screen):
-		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x, self.y)
+		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - camera.x, self.y - camera.y)
 
 	# Changes direction. If invaild input defaults to "NEUTRAL" Currently Not Used. Might use to bounce off walls.
 	def changeDirection(self, direction):
@@ -571,7 +571,7 @@ class HomingFireball(Sprite):
 			self.isActive = False
 
 	def draw(self, screen):
-		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x, self.y)
+		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - camera.x, self.y - camera.y)
 		
 	def collideWithBorder(self, screenSize):
 		# Past the border, but previously on left hand side of the border
@@ -622,7 +622,7 @@ class FireballExplosion(Sprite):
 		self.animate()
 
 	def draw(self, screen):
-		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x, self.y)
+		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - camera.x, self.y - camera.y)
 		
 	def animate(self):
 		self.currentSpriteCellIndex += 1
@@ -632,10 +632,11 @@ class FireballExplosion(Sprite):
 			self.isActive = False
 
 class LightningBolt(Sprite):
-	def __init__(self, xPos, yPos, model):
+	def __init__(self, xPos, yPos, model, target):
 		super(LightningBolt, self).__init__(xPos, yPos, 128, 256, False, False)
 		self.model = model
 		self.animateDuration = 4
+		self.target = target
 	
 		# Load all SpriteSheets
 		if "lightningBoltSpriteSheets" not in self.model.dictOfSpriteSheets.keys():
@@ -648,10 +649,12 @@ class LightningBolt(Sprite):
 		self.currentSpriteSheet = self.lightningBoltSpriteSheets[0]
 		
 	def update(self):
+		self.x = self.target.x - 34
+		self.y = self.target.y - 220
 		self.animate()
 
 	def draw(self, screen):
-		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x, self.y)
+		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - camera.x, self.y - camera.y)
 		
 	def animate(self):
 		self.currentSpriteCellIndex += 1
@@ -682,7 +685,7 @@ class BloodSplatter(Sprite):
 		self.animate()
 
 	def draw(self, screen):
-		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x, self.y)
+		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - camera.x , self.y - camera.y)
 		
 	def animate(self):
 		self.currentSpriteCellIndex += 1
@@ -768,10 +771,10 @@ class Slime(Sprite):
 		self.animate()	
 
 	def draw(self, screen):
-		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x, self.y)
+		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - camera.x, self.y - camera.y)
 
 	def trackMainCharacter(self):
-		self.distVector.move_towards_ip(self.model.mainCharacter.distVector, 2)
+		self.distVector.move_towards_ip(self.model.mainCharacter.distVector, 5)
 	
 		listOfSlimes = [sprite for sprite in self.model.sprites if isinstance(sprite, Slime)]
 		numOfCollisions = 0
@@ -854,7 +857,7 @@ class Slime(Sprite):
 			self.deathCounter = 20
 
 	def hitByLightning(self):
-		self.model.spriteListBuffer.append(LightningBolt(self.x - 34, self.y - 220 , self.model))
+		self.model.spriteListBuffer.append(LightningBolt(self.x - 34, self.y - 220 , self.model, self))
 		self.isHurt = True
 		self.isHurtCounter = 20
 		self.isDying = True
@@ -910,14 +913,14 @@ class FlyingSword(Sprite):
 		self.x = self.rect.x
 		self.y = self.rect.y
 
-	def draw(self, surface):
+	def draw(self, screen):
 		mask = pygame.mask.from_surface(self.image)
 		greenSilhouette = mask.to_surface(setcolor="green", unsetcolor=None)
-		surface.blit(greenSilhouette, self.rect)
+		screen.blit(greenSilhouette, (self.rect.x - camera.x, self.rect.y - camera.y, self.rect.width, self.rect.height))
 		
 		self.assignCurrentAlpha()
 		self.image.set_alpha(self.currentAlpha)
-		surface.blit(self.image, self.rect)
+		screen.blit(self.image, (self.rect.x - camera.x, self.rect.y - camera.y, self.rect.width, self.rect.height))
 
 	def collideWithSprite(self, sprite):
 		pass	

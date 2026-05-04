@@ -1,4 +1,5 @@
 from pytmx.util_pygame import load_pygame
+from Util import camera
 
 class Map():
     def __init__(self, path, screen):
@@ -9,7 +10,7 @@ class Map():
     def draw(self):
         for layer in self.tmxData:
             for tile in layer.tiles():
-                x_pixel = tile[0] * 32
-                y_pixel = tile[1] * 32
+                x_pixel = (tile[0] * 32) - camera.x 
+                y_pixel = (tile[1] * 32) - camera.y 
                 self.screen.blit(tile[2], (x_pixel, y_pixel))
         

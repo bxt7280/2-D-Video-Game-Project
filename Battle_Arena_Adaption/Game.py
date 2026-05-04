@@ -3,6 +3,7 @@ import pygame
 from Model import Model
 from Controller import Controller
 from View import View
+from Util import camera
 
 class Game():
 	def __init__(self):
@@ -10,6 +11,8 @@ class Game():
 		pygame.init()
 		self.screen_size = (800, 800)
 		self.screen = pygame.display.set_mode(self.screen_size, 32)
+		camera.width = self.screen_size[0]
+		camera.height = self.screen_size[1]
 		self.clock = pygame.time.Clock()
 
 		self.m = Model(self.screen, self.screen_size)

@@ -9,7 +9,7 @@ class Model():
 		self.dictOfSingleImages = {}
 		self.sprites = [] # Main list of sprites
 		self.spriteListBuffer = [] # List of sprites that need to be added to main sprite list
-		self.mainCharacter = MainCharacter(400, 800, self) 		
+		self.mainCharacter = MainCharacter(camera.width / 2, camera.height / 2, self) 		
 		self.sprites.append(self.mainCharacter)   
 
 		# Toggle Hitbox mode on/off
@@ -31,7 +31,7 @@ class Model():
 		self.updateAllSprites()
 
 		# Check for collisions with border
-		self.checkBorderCollisions()
+		#sself.checkBorderCollisions()
 
 		# Check for collisions with other sprites
 		self.checkSpriteCollisions()

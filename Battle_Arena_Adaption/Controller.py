@@ -21,7 +21,7 @@ class Controller():
 				sys.exit()
 			elif event.type == KEYDOWN:
 				if event.key == K_ESCAPE:
-					#print(len(self.model.sprites))
+					print(len(self.model.sprites))
 					self.keepGoing = False
 
 				if self.spriteSelectorOn:
@@ -73,14 +73,14 @@ class Controller():
 		if self.editorToggle == True and len(self.model.sprites) > 0:
 			spriteClicked = None
 			for sprite in self.model.sprites:
-				if self.model.spriteClicked(sprite, x, y):
+				if self.model.spriteClicked(sprite, x + camera.x, y + camera.y):
 					spriteClicked = sprite
 					pass
 
 			if spriteClicked != None and not(isinstance(spriteClicked, MainCharacter)):
 				self.model.sprites.remove(spriteClicked)
 			else:
-				self.model.sprites.append(self.spriteToBeDrawn(x, y, self.model))
+				self.model.sprites.append(self.spriteToBeDrawn(x + camera.x, y + camera.y, self.model))
 
 	def evaluateKeyPress(self):
 		# Get list of all keys being pressed
@@ -123,7 +123,7 @@ class Controller():
 				self.model.mainCharacter.changeDirection(Direction.LEFT)				
 			elif keys[K_RIGHT]:
 				if not keys[K_LCTRL]:			
-					self.model.mainCharacter.x += 6
+					self.model.mainCharacter.x += 6				
 					self.model.mainCharacter.animateWalk()
 				self.model.mainCharacter.changeDirection(Direction.RIGHT)
 				
@@ -136,9 +136,12 @@ class Controller():
 				if not keys[K_LCTRL]:
 					self.model.mainCharacter.y += 6
 					self.model.mainCharacter.animateWalk()
-				self.model.mainCharacter.changeDirection(Direction.DOWN)			
+				self.model.mainCharacter.changeDirection(Direction.DOWN)		
 		else:
 			self.model.mainCharacter.animateIdle()
+
+		camera.x = self.model.mainCharacter.x - camera.width / 2 
+		camera.y = self.model.mainCharacter.y - camera.height / 2
 
 # Dictionary of sprite classes to dynamically instantiate sprites during runtime
 dictOfSpriteClasses = {

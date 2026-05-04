@@ -2,6 +2,9 @@ import pygame
 from Sprites import *
 from enum import Enum
 
+# Offset to create illusion of camera. Imported throughout application
+camera = pygame.Rect(0, 0, 0, 0)
+
 class Direction(Enum):
 	UP = "UP"
 	DOWN = "DOWN"
