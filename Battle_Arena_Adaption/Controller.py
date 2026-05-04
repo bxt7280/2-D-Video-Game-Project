@@ -140,8 +140,8 @@ class Controller():
 		else:
 			self.model.mainCharacter.animateIdle()
 
-		camera.x = self.model.mainCharacter.x - camera.width / 2 
-		camera.y = self.model.mainCharacter.y - camera.height / 2
+		camera.x = self.model.mainCharacter.x - camera.width / 2 + self.model.mainCharacter.w / 2
+		camera.y = self.model.mainCharacter.y - camera.height / 2 
 
 # Dictionary of sprite classes to dynamically instantiate sprites during runtime
 dictOfSpriteClasses = {

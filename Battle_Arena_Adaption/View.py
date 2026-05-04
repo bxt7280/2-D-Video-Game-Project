@@ -1,5 +1,5 @@
 import pygame
-from Sprites import Border, Slime
+from Sprites import Border, Slime, MainCharacter
 from Map import Map
 from Util import camera
 
@@ -20,10 +20,10 @@ class View():
 	def update(self):   
 		#print(self.model.mainCharacter.x, self.model.mainCharacter.y)
 		#print(self.camera.x, self.camera.y)
-		self.screen.fill("black") 
+		self.screen.fill("darkblue") 
 		#self.screen.fill([0,200,100])
-		self.screen.blit(self.background, (0 - camera.x, 0 - camera.y))
-		#self.currentMap.draw()
+		#self.screen.blit(self.background, (0 - camera.x, 0 - camera.y))
+		self.currentMap.draw()
 		self.drawSprites()
 		if self.displayTextSpriteSelect:	
 			text_surface = self.base_font.render("Sprite Type: " + self.user_text, True, (255,255,255))
@@ -39,15 +39,18 @@ class View():
 				sprite.draw(self.screen)
 	
 			if self.model.hitBoxModeOn:
-				pygame.draw.rect(self.screen, "red", (sprite.x + sprite.hitboxLeft - camera.x, sprite.y + sprite.hitboxTop - camera.y , 
-				sprite.w + sprite.hitboxW, sprite.h + sprite.hitboxH), 1)
+				if isinstance(sprite, MainCharacter):
+					pygame.draw.rect(self.screen, "red", (sprite.x + sprite.hitboxLeft - camera.x, 
+								sprite.y + sprite.hitboxTop - camera.y, sprite.w + sprite.hitboxW, sprite.h + sprite.hitboxH), 1)
+				
+				if isinstance(sprite, Slime):
+					pygame.draw.circle(self.screen, "red", (sprite.hitboxCenter[0] - camera.x, sprite.hitboxCenter[1] - camera.y), sprite.radius, 1)
+					#pygame.draw.line(self.screen, "black", (sprite.hitboxCenter[0] - camera.x, sprite.hitboxCenter[1] - camera.y) , 
+					#				(self.model.mainCharacter.distVector.x - camera.x, self.model.mainCharacter.distVector.y - camera.y))
+				
 				# pygame.draw.rect(self.screen, "black", (sprite.x - camera.x , sprite.y - camera.y, 
 				# sprite.w,sprite.h ), 1)
 				
-				if isinstance(sprite, Slime):
-					pygame.draw.line(self.screen, "black", (sprite.distVector.x - camera.x, sprite.distVector.y - camera.y) , 
-					(self.model.mainCharacter.distVector.x - camera.x, self.model.mainCharacter.distVector.y - camera.y))
-					#print(sprite.distVector.distance_to(self.model.mainCharacter.distVector))
 
 	def drawHealthBar(self):
 		playerHP = round(self.model.mainCharacter.hp/self.model.mainCharacter.maxHp * 100, 2)	

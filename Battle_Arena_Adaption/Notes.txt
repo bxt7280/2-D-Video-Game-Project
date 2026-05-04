@@ -69,6 +69,10 @@ TODAY'S GOALS
     - Have a list of buttons in view to be updated every frame
     - Use sprite clicked logic to turn off and on
 
+- Modify draw methods in sprites to not take in a screen parameter?
+
+- Make enemies and projectiles target center of sprite. 
+
 
 
 

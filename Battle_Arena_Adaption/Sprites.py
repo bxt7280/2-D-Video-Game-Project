@@ -76,6 +76,12 @@ class MainCharacter(Sprite):
 		# For red pulsating effect on mainCharacter
 		self.currentAlpha = 255
 		self.alphaDirectionSwitch = True
+
+		# Center of hitbox
+		self.hitboxRect =  pygame.Rect(self.x + self.hitboxLeft, self.y + self.hitboxTop, 
+								self.w + self.hitboxW, self.h + self.hitboxH)
+
+		self.hitboxCenter = self.hitboxRect.center
 		
 	def update(self):
 		# Reset number of collisions
@@ -731,6 +737,13 @@ class Slime(Sprite):
 
 		self.distVector = pygame.math.Vector2(self.x, self.y) # Vector used to follow mainCharacter
 
+		# Properties for circle based collision
+		# Determine center of hitbox
+		self.hitboxCenter = pygame.Rect(self.x + self.hitboxLeft, self.y + self.hitboxTop, 
+										self.w + self.hitboxW, self.h + self.hitboxH).center
+		self.radius = 30
+
+
 	def update(self):
 		# Update distance vector
 		self.distVector.x = self.x + self.hitboxLeft
@@ -761,6 +774,10 @@ class Slime(Sprite):
 		
 		self.trackMainCharacter()
 
+		# Update hitboxCenter
+		self.hitboxCenter = pygame.Rect(self.x + self.hitboxLeft, self.y + self.hitboxTop, 
+							self.w + self.hitboxW, self.h + self.hitboxH).center
+
 		# Death if hit by lightning
 		if self.isDying == True:
 			if self.deathCounter == 0:
@@ -774,18 +791,9 @@ class Slime(Sprite):
 		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - camera.x, self.y - camera.y)
 
 	def trackMainCharacter(self):
-		self.distVector.move_towards_ip(self.model.mainCharacter.distVector, 5)
-	
-		listOfSlimes = [sprite for sprite in self.model.sprites if isinstance(sprite, Slime)]
-		numOfCollisions = 0
-		for slime in listOfSlimes:
-			if slime != self:
-				if self.model.contactWithSprite(Slime(self.distVector.x, self.distVector.y, self.model), slime):
-					numOfCollisions += 1
-
-		if numOfCollisions == 0:	
-			self.x = self.distVector.x
-			self.y = self.distVector.y
+		self.distVector.move_towards_ip(self.model.mainCharacter.distVector, 3)
+		self.x = self.distVector.x
+		self.y = self.distVector.y
 		
 	def animate(self):
 		if self.isHurt == True and self.isHurtCounter > 0:
@@ -823,7 +831,12 @@ class Slime(Sprite):
 		if self.y + self.hitboxTop <= 0 and self.py + self.hitboxTop >= 0:
 			self.y = 0 - self.hitboxTop
 
-	def collideWithSprite(self, sprite):
+	def move(self, amount):
+		self.distVector += amount
+		self.x = self.distVector.x
+		self.y = self.distVector.y
+
+	def collideWithSprite(self, sprite, depth = None, normal = None):
 		if isinstance(sprite, Fireball) or isinstance(sprite, HomingFireball) and self.isDying == False: 		
 			self.isHurt = True
 			self.isHurtCounter = 20
@@ -832,19 +845,28 @@ class Slime(Sprite):
 			self.isDying = True
 			self.deathCounter = 20
 
+		# Rectangle collision resolution between sprites
+		# if isinstance(sprite, Slime):
+		# 	# In the sprite, but previously on left hand side of the sprite
+		# 	if self.x + self.hitboxLeft + (self.w + self.hitboxW) >= sprite.x + sprite.hitboxLeft and self.px + self.hitboxLeft + (self.w + self.hitboxW) <= sprite.x + sprite.hitboxLeft:
+		# 		self.x = sprite.x + sprite.hitboxLeft - self.hitboxLeft	- (self.w + self.hitboxW)	
+		# 	# In the sprite, but previously on right hand side of the sprite
+		# 	if self.x + self.hitboxLeft <= sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW) and self.px + self.hitboxLeft >= sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW):
+		# 		self.x = sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW) - self.hitboxLeft
+		# 	# In the sprite, but previously above the sprite
+		# 	if self.y + self.hitboxTop +(self.h + self.hitboxH) >= sprite.y + sprite.hitboxTop and self.py + self.hitboxTop + (self.h + self.hitboxH) <= sprite.y + sprite.hitboxTop:
+		# 		self.y = sprite.y + sprite.hitboxTop - self.hitboxTop - (self.h + self.hitboxH)
+		# 	# In the sprite, but previously below the sprite
+		# 	if self.y + self.hitboxTop <= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) and self.py + self.hitboxTop >= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH):
+		# 		self.y = sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) - self.hitboxTop
+
+		# Circle collision
 		if isinstance(sprite, Slime):
-			# In the sprite, but previously on left hand side of the sprite
-			if self.x + self.hitboxLeft + (self.w + self.hitboxW) >= sprite.x + sprite.hitboxLeft and self.px + self.hitboxLeft + (self.w + self.hitboxW) <= sprite.x + sprite.hitboxLeft:
-				self.x = sprite.x + sprite.hitboxLeft - self.hitboxLeft	- (self.w + self.hitboxW)	
-			# In the sprite, but previously on right hand side of the sprite
-			if self.x + self.hitboxLeft <= sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW) and self.px + self.hitboxLeft >= sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW):
-				self.x = sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW) - self.hitboxLeft
-			# In the sprite, but previously above the sprite
-			if self.y + self.hitboxTop +(self.h + self.hitboxH) >= sprite.y + sprite.hitboxTop and self.py + self.hitboxTop + (self.h + self.hitboxH) <= sprite.y + sprite.hitboxTop:
-				self.y = sprite.y + sprite.hitboxTop - self.hitboxTop - (self.h + self.hitboxH)
-			# In the sprite, but previously below the sprite
-			if self.y + self.hitboxTop <= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) and self.py + self.hitboxTop >= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH):
-				self.y = sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) - self.hitboxTop
+			# Minimum translation vector. Distance and direction to separate sprites
+			mtv = depth * normal
+			# Move both sprites apart by half the distance they intersect
+			self.move(-mtv / 2.0)
+			sprite.move(mtv / 2.0)
 
 	# Experiment with mask collision
 	def maskCollideWithSprite(self, sprite):

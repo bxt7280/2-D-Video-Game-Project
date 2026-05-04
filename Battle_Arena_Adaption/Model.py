@@ -9,7 +9,7 @@ class Model():
 		self.dictOfSingleImages = {}
 		self.sprites = [] # Main list of sprites
 		self.spriteListBuffer = [] # List of sprites that need to be added to main sprite list
-		self.mainCharacter = MainCharacter(camera.width / 2, camera.height / 2, self) 		
+		self.mainCharacter = MainCharacter(camera.width / 2 - 128 ,camera.width / 2, self) 	# value "128" is half the width of the mainCharacter image	
 		self.sprites.append(self.mainCharacter)   
 
 		# Toggle Hitbox mode on/off
@@ -60,10 +60,15 @@ class Model():
 			if sprite.canCollideWithSprite:
 				for sprite2 in self.sprites:
 					if sprite2 != sprite:
-						# Experiment with mask collision
+						# Mask Collision for Slimes and FlyingSword
 						if isinstance(sprite, Slime) and isinstance(sprite2, FlyingSword):
 							if self.maskContactWithSprite(sprite, sprite2):
 								sprite.maskCollideWithSprite(sprite2)
+						# Circle Collision for Slime vs Slime
+						elif isinstance(sprite,Slime,) and isinstance(sprite2, Slime):
+							collisionResult = self.circleContactWithSprite(sprite, sprite2)
+							if collisionResult[0]:	
+								sprite.collideWithSprite(sprite2, collisionResult[1], collisionResult[2])
 						else:
 							if self.contactWithSprite(sprite, sprite2): 
 								sprite.collideWithSprite(sprite2)
@@ -104,6 +109,30 @@ class Model():
 			return True
 		else:
 			return False
+		
+	def circleContactWithSprite(self, a, b):
+		depth = 0
+		normal = pygame.math.Vector2(0,0)
+		
+		n = b.distVector - a.distVector
+		distSq = n.length_squared()
+		r2 = a.radius + b.radius
+		radiusSq = r2 * r2
+
+		if (distSq >= radiusSq):
+			return [False]
+		
+		dist = math.sqrt(distSq)
+		
+		if dist != 0:
+			depth = r2 - dist
+			normal = n / dist
+		else:
+			depth = r2;
+			normal = pygame.math.Vector2(1,0)
+		
+		return [True, depth, normal]
+		
 		
 	def spriteClicked(self,s, mouse_x, mouse_y):
 		clicked = True
