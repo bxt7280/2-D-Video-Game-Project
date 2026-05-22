@@ -10,9 +10,10 @@ class Game():
 		print("Use the arrow keys to move. Press Esc to quit.")
 		pygame.init()
 		self.screen_size = (800, 800)
-		self.screen = pygame.display.set_mode(self.screen_size, 32)
-		camera.width = self.screen_size[0]
-		camera.height = self.screen_size[1]
+		self.screen = pygame.display.set_mode(self.screen_size)
+		pygame.display.set_caption("Battle Arena Adaption")
+		camera.width = self.screen_size[0] 
+		camera.height = self.screen_size[1] 
 		self.clock = pygame.time.Clock()
 
 		self.m = Model(self.screen, self.screen_size)
@@ -25,7 +26,7 @@ class Game():
 			self.m.update()
 			self.v.update()
 			self.clock.tick(30)
-			print(self.clock.get_fps())
+			#print(self.clock.get_fps())
 			
 		print("Goodbye")
 

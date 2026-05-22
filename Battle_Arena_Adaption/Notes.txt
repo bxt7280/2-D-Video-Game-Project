@@ -55,6 +55,7 @@ TODAY'S GOALS
         - make method that will add enemy sprites to main sprites list in model class
 
 - Add camera and increase size of map
+    - Make sure sprites positions are updated correctly
 - turn character movement in controller into method?
 
 - Tighten Up Velle's health bar
@@ -73,6 +74,20 @@ TODAY'S GOALS
 
 - Make enemies and projectiles target center of sprite. 
 
+- Modify Rectangle collision resolution to use sides of rectangle
+
+- Determine width of sprites without hardCoding
+
+- Update slime to support infinite map scroll
+    - Add modulo event booleans
+    - Slime needs method to determine modulo events. Use code from controller.
+        - Perhaps move same code to mainCharacter. 
+    - In order to track character determine shortest distance to character in both x and y directions.
+
+- Address issue when sprite has barely crossed border and disappears
+    - Make camera bigger than map size?
+
+- Rename collide with sprite methods to rectCollideWithSprite
 
 
 

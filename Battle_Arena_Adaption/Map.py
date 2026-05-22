@@ -1,3 +1,4 @@
+import pygame
 from pytmx.util_pygame import load_pygame
 from Util import camera
 
@@ -13,4 +14,13 @@ class Map():
                 x_pixel = (tile[0] * 32) - camera.x 
                 y_pixel = (tile[1] * 32) - camera.y 
                 self.screen.blit(tile[2], (x_pixel, y_pixel))
+    
+    def drawWithOffset(self, offsetX, offsetY):
+        for layer in self.tmxData:
+            for tile in layer.tiles():
+                x_pixel = (tile[0] * 32) + offsetX
+                y_pixel = (tile[1] * 32) + offsetY  
+                self.screen.blit(tile[2], (x_pixel, y_pixel))
+            
+
         

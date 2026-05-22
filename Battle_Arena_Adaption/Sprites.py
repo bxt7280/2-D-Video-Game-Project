@@ -82,6 +82,12 @@ class MainCharacter(Sprite):
 								self.w + self.hitboxW, self.h + self.hitboxH)
 
 		self.hitboxCenter = self.hitboxRect.center
+
+		# Determine if mainCharacter has moved past border of map
+		self.moduloEventUp = False
+		self.moduloEventDown = False		
+		self.moduloEventLeft = False
+		self.moduloEventRight = False	
 		
 	def update(self):
 		# Reset number of collisions
@@ -90,6 +96,12 @@ class MainCharacter(Sprite):
 		# Update distVector to save current coordinates
 		self.distVector.x = self.x + self.hitboxLeft
 		self.distVector.y = self.y + self.hitboxTop
+
+		# Update hitboxRect and hitboxCenter
+		self.hitboxRect = pygame.Rect(self.x + self.hitboxLeft, self.y + self.hitboxTop, 
+							self.w + self.hitboxW, self.h + self.hitboxH)
+		
+		self.hitboxCenter = self.hitboxRect.center
 
 		# Lighting attack update
 		if self.lightningAttackOn == True:
@@ -111,6 +123,11 @@ class MainCharacter(Sprite):
 			for sword in self.listOfActiveSwords:
 				sword.isActive = False
 			self.listOfActiveSwords.clear()
+
+		# print("up:", self.moduloEventUp)
+		# print("down: ", self.moduloEventDown)
+		# print("left: ", self.moduloEventLeft)
+		# print("right: ", self.moduloEventRight)
 
 	def draw(self, screen):
 		if self.pulsateRed == True:
@@ -289,7 +306,46 @@ class MainCharacter(Sprite):
 		# # In the sprite, but previously below the sprite
 		# if self.y + self.hitboxTop <= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) and self.py + self.hitboxTop >= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH):
 		# 	self.y = sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) - self.hitboxTop
+	
+	def calculateModuloEvents(self):
+		# Determine what direction sprite was moving when crossing the border of the map
+		if self.x < 0:			
+			self.moduloEventLeft = True
+
+		if self.x > self.model.currentMapSize[0]:
+			self.moduloEventRight = True 
+
+		self.x = self.x % self.model.currentMapSize[0] # Perform modulo operation due to map scrolling 
+
+		if self.y < 0:
+			self.moduloEventUp = True	
+
+		if self.y > self.model.currentMapSize[1]:
+			self.moduloEventDown = True	
 		
+		self.y = self.y % self.model.currentMapSize[1]
+
+		# Reset modulo events if sprite crosses a certain point
+		if self.x + self.w < self.model.currentMapSize[0] - self.model.currentMapSize[0] / 8:
+			self.moduloEventLeft = False
+		if self.x + self.w >= self.model.currentMapSize[0] - self.model.currentMapSize[0] / 8:
+			self.moduloEventLeft = True
+
+		if self.x > self.model.currentMapSize[0] / 8:
+			self.moduloEventRight = False
+		if self.x <= self.model.currentMapSize[0] / 8:
+			self.moduloEventRight = True
+
+		if self.y + self.h < self.model.currentMapSize[1] - self.model.currentMapSize[1] / 8:
+			self.moduloEventUp = False
+		if self.y + self.h >= self.model.currentMapSize[1] - self.model.currentMapSize[1] / 8:
+			self.moduloEventUp = True
+
+		if self.y > self.model.currentMapSize[1] / 8:
+			self.moduloEventDown = False
+		if self.y <= self.model.currentMapSize[1] / 8:
+			self.moduloEventDown = True
+
 	def savePreviousCoordinates(self):
 		self.px = self.x
 		self.py = self.y
@@ -719,7 +775,6 @@ class Slime(Sprite):
 			
 		self.image = self.model.dictOfSingleImages["slimeSingleImage"]
 		
-		
 		# Save original position as vector
 		self.originalPos = pygame.math.Vector2(self.x, self.y)
 	
@@ -739,10 +794,17 @@ class Slime(Sprite):
 
 		# Properties for circle based collision
 		# Determine center of hitbox
-		self.hitboxCenter = pygame.Rect(self.x + self.hitboxLeft, self.y + self.hitboxTop, 
-										self.w + self.hitboxW, self.h + self.hitboxH).center
+		self.hitboxRect = pygame.Rect(self.x + self.hitboxLeft, self.y + self.hitboxTop, 
+										self.w + self.hitboxW, self.h + self.hitboxH)
+		
+		self.hitboxCenter = self.hitboxRect.center
 		self.radius = 30
 
+		# Determine if slime has moved past border of map
+		self.moduloEventUp = False
+		self.moduloEventDown = False		
+		self.moduloEventLeft = False
+		self.moduloEventRight = False	
 
 	def update(self):
 		# Update distance vector
@@ -774,10 +836,12 @@ class Slime(Sprite):
 		
 		self.trackMainCharacter()
 
-		# Update hitboxCenter
-		self.hitboxCenter = pygame.Rect(self.x + self.hitboxLeft, self.y + self.hitboxTop, 
-							self.w + self.hitboxW, self.h + self.hitboxH).center
-
+		# Update hitboxRect and hitboxCenter
+		self.hitboxRect = pygame.Rect(self.x + self.hitboxLeft, self.y + self.hitboxTop, 
+							self.w + self.hitboxW, self.h + self.hitboxH)
+		
+		self.hitboxCenter = self.hitboxRect.center
+		
 		# Death if hit by lightning
 		if self.isDying == True:
 			if self.deathCounter == 0:
@@ -785,15 +849,99 @@ class Slime(Sprite):
 				self.isActive = False
 			self.deathCounter -= 1
 
-		self.animate()	
+
+		# Adjust coordinates if exceeds map size 
+		#self.calculateModuloEvents()
+		# print("up:", self.moduloEventUp)
+		# print("down: ", self.moduloEventDown)
+		# print("left: ", self.moduloEventLeft)
+		# print("right: ", self.moduloEventRight)
+
+		self.animate()
+
+		#print("Slime: ", self.x, self.y)	
 
 	def draw(self, screen):
+		# Follows same pattern as drawMap method in View Class
+		# Center Image
 		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - camera.x, self.y - camera.y)
+	
+		# Moving Right
+		if camera.x + camera.width > self.model.currentMapSize[0]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y - camera.y)
+		# Moving Left
+		if camera.x < 0:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y - camera.y)
+		# Moving Up
+		if camera.y < 0:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x -camera.x, self.y - self.model.currentMapSize[1] - camera.y)
+		# Moving Down
+		if camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x -camera.x, self.y + self.model.currentMapSize[1] - camera.y)
+
+		# Diagonals
+		# Right-Up
+		if camera.x + camera.width > self.model.currentMapSize[0] and camera.y < 0:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y - self.model.currentMapSize[1] - camera.y)		
+		# Right-Down
+		if camera.x + camera.width > self.model.currentMapSize[0] and camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y + self.model.currentMapSize[1] - camera.y)			
+		# Left-Up
+		if camera.x < 0 and camera.y < 0:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y - self.model.currentMapSize[1] - camera.y)		
+		# Left-Down
+		if camera.x < 0 and camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y + self.model.currentMapSize[1] - camera.y)	
+
+	def calculateModuloEvents(self):
+		# Determine what direction sprite was moving when crossing the border of the map
+		if self.x < 0:			
+			self.moduloEventLeft = True
+
+		if self.x > self.model.currentMapSize[0]:
+			self.moduloEventRight = True 
+
+		self.x = self.x % self.model.currentMapSize[0] # Perform modulo operation due to map scrolling 
+
+		if self.y < 0:
+			self.moduloEventUp = True	
+
+		if self.y > self.model.currentMapSize[1]:
+			self.moduloEventDown = True	
+		
+		self.y = self.y % self.model.currentMapSize[1]
+
+		# Reset modulo events if sprite crosses a certain point
+		if self.x + self.w < self.model.currentMapSize[0] - self.model.currentMapSize[0] / 8:
+			self.moduloEventLeft = False
+		if self.x + self.w >= self.model.currentMapSize[0] - self.model.currentMapSize[0] / 8:
+			self.moduloEventLeft = True
+
+		if self.x > self.model.currentMapSize[0] / 8:
+			self.moduloEventRight = False
+		if self.x <= self.model.currentMapSize[0] / 8:
+			self.moduloEventRight = True
+
+		if self.y + self.h < self.model.currentMapSize[1] - self.model.currentMapSize[1] / 8:
+			self.moduloEventUp = False
+		if self.y + self.h >= self.model.currentMapSize[1] - self.model.currentMapSize[1] / 8:
+			self.moduloEventUp = True
+
+		if self.y > self.model.currentMapSize[1] / 8:
+			self.moduloEventDown = False
+		if self.y <= self.model.currentMapSize[1] / 8:
+			self.moduloEventDown = True
 
 	def trackMainCharacter(self):
-		self.distVector.move_towards_ip(self.model.mainCharacter.distVector, 3)
+		shortestDist = self.model.calculateDistanceOffsets(self, self.model.mainCharacter)
+				
+		targetDest = pygame.math.Vector2(self.model.mainCharacter.distVector.x + shortestDist[0], self.model.mainCharacter.distVector.y + shortestDist[1])
+		
+		self.distVector.move_towards_ip(targetDest, 3)
 		self.x = self.distVector.x
 		self.y = self.distVector.y
+
+		self.calculateModuloEvents()
 		
 	def animate(self):
 		if self.isHurt == True and self.isHurtCounter > 0:
@@ -831,11 +979,6 @@ class Slime(Sprite):
 		if self.y + self.hitboxTop <= 0 and self.py + self.hitboxTop >= 0:
 			self.y = 0 - self.hitboxTop
 
-	def move(self, amount):
-		self.distVector += amount
-		self.x = self.distVector.x
-		self.y = self.distVector.y
-
 	def collideWithSprite(self, sprite, depth = None, normal = None):
 		if isinstance(sprite, Fireball) or isinstance(sprite, HomingFireball) and self.isDying == False: 		
 			self.isHurt = True
@@ -844,6 +987,9 @@ class Slime(Sprite):
 			self.provokedCounter = 150
 			self.isDying = True
 			self.deathCounter = 20
+
+		# if isinstance(sprite, MainCharacter):
+		# 	print("slime contact with main character.")
 
 		# Rectangle collision resolution between sprites
 		# if isinstance(sprite, Slime):
@@ -860,13 +1006,19 @@ class Slime(Sprite):
 		# 	if self.y + self.hitboxTop <= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) and self.py + self.hitboxTop >= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH):
 		# 		self.y = sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) - self.hitboxTop
 
-		# Circle collision
+	def circleCollideWithSprite(self, sprite, depth = None, normal = None):
 		if isinstance(sprite, Slime):
 			# Minimum translation vector. Distance and direction to separate sprites
 			mtv = depth * normal
 			# Move both sprites apart by half the distance they intersect
 			self.move(-mtv / 2.0)
 			sprite.move(mtv / 2.0)
+
+	def move(self, amount):
+		self.distVector += amount
+		self.x = self.distVector.x
+		self.y = self.distVector.y
+		self.calculateModuloEvents()
 
 	# Experiment with mask collision
 	def maskCollideWithSprite(self, sprite):

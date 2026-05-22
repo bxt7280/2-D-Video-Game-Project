@@ -1,7 +1,7 @@
 import pygame
 from Sprites import Border, Slime, MainCharacter
 from Map import Map
-from Util import camera
+from Util import camera, Direction
 
 class View():
 	def __init__(self, model, screen, screenSize):
@@ -9,7 +9,11 @@ class View():
 		self.screen = screen		
 		self.screen_size = screenSize
 		self.model = model
-		self.currentMap = Map("./Maps/testMap/testMap.tmx", self.screen)
+		# self.currentMap = Map("./Maps/testMap/testMap.tmx", self.screen)
+		# self.currentMapSize = (800, 800)		
+		self.currentMap = Map("./Maps/testMapLarge/testMapLarge.tmx", self.screen)
+		self.currentMapSize = (2400, 2400)
+		self.model.currentMapSize = self.currentMapSize 
 		self.background = pygame.image.load("./Images/forestBackground.png")
 
 		# User text input
@@ -23,8 +27,11 @@ class View():
 		self.screen.fill("darkblue") 
 		#self.screen.fill([0,200,100])
 		#self.screen.blit(self.background, (0 - camera.x, 0 - camera.y))
-		self.currentMap.draw()
+		
+		self.drawMap()
+		
 		self.drawSprites()
+		
 		if self.displayTextSpriteSelect:	
 			text_surface = self.base_font.render("Sprite Type: " + self.user_text, True, (255,255,255))
 			self.screen.blit(text_surface,(0,0))
@@ -48,8 +55,8 @@ class View():
 					#pygame.draw.line(self.screen, "black", (sprite.hitboxCenter[0] - camera.x, sprite.hitboxCenter[1] - camera.y) , 
 					#				(self.model.mainCharacter.distVector.x - camera.x, self.model.mainCharacter.distVector.y - camera.y))
 				
-				# pygame.draw.rect(self.screen, "black", (sprite.x - camera.x , sprite.y - camera.y, 
-				# sprite.w,sprite.h ), 1)
+				pygame.draw.rect(self.screen, "black", (sprite.x - camera.x , sprite.y - camera.y, 
+				sprite.w,sprite.h ), 1)
 				
 
 	def drawHealthBar(self):
@@ -80,5 +87,50 @@ class View():
 				
 		#pygame.draw.rect(self.screen, "#CC0000", (self.screen_size[0] - 200 + 2, self.screen_size[1] - 778 + 2, 196 * (playerHP/100), 32))
 
-		
-		
+	# Infinite scrolling map
+	def drawMap(self):
+		# Center image
+		self.currentMap.drawWithOffset(-camera.x, -camera.y)
+
+		# Moving Right
+		if camera.x + camera.width > self.currentMapSize[0]:
+			#self.currentMap.drawWithOffset(self.currentMapSize[0] - camera.x, -camera.y)
+			#print("right painted")
+			pass
+		# Moving Left
+		if camera.x < 0:
+			#self.currentMap.drawWithOffset(-self.currentMapSize[0] + -camera.x, -camera.y)
+			#print("left painted")
+			pass	
+		# Moving Up
+		if camera.y < 0:
+			#self.currentMap.drawWithOffset(-camera.x, -self.currentMapSize[1] + -camera.y)
+			#print("up painted")
+			pass
+		# Moving Down
+		if camera.y + camera.height > self.currentMapSize[1]:
+			#self.currentMap.drawWithOffset(-camera.x, self.currentMapSize[1] -camera.y)
+			#print("down painted")
+			pass
+
+		# Diagonals				
+		# Right-Up
+		if camera.x + camera.width > self.currentMapSize[0] and camera.y < 0:
+			#self.currentMap.drawWithOffset(self.currentMapSize[0] - camera.x, -self.currentMapSize[1] + -camera.y)	
+			#print("right up painted")
+			pass
+		# Right-Down
+		if camera.x + camera.width > self.currentMapSize[0] and camera.y + camera.height > self.currentMapSize[1]:
+			#self.currentMap.drawWithOffset(self.currentMapSize[0] - camera.x, self.currentMapSize[1] -camera.y)
+			#print("right down painted")
+			pass 	
+		# Left-Up
+		if camera.x < 0 and camera.y < 0:
+			#self.currentMap.drawWithOffset(-self.currentMapSize[0] + -camera.x, -self.currentMapSize[1] + -camera.y)
+			#print("left up painted")
+			pass
+		# Left-Down
+		if camera.x < 0 and camera.y + camera.height > self.currentMapSize[1]:
+			#self.currentMap.drawWithOffset(-self.currentMapSize[0] + -camera.x, self.currentMapSize[1] -camera.y)
+			#print("left down painted")
+			pass

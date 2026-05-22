@@ -21,7 +21,7 @@ class Controller():
 				sys.exit()
 			elif event.type == KEYDOWN:
 				if event.key == K_ESCAPE:
-					print(len(self.model.sprites))
+					#print(len(self.model.sprites))
 					self.keepGoing = False
 
 				if self.spriteSelectorOn:
@@ -140,8 +140,14 @@ class Controller():
 		else:
 			self.model.mainCharacter.animateIdle()
 
+		# Adjustments for camera
+		# Determine what direction mainCharacter was moving when crossing the border of the map
+		self.model.mainCharacter.calculateModuloEvents()
 		camera.x = self.model.mainCharacter.x - camera.width / 2 + self.model.mainCharacter.w / 2
-		camera.y = self.model.mainCharacter.y - camera.height / 2 
+		camera.y = self.model.mainCharacter.y - camera.height / 2 + self.model.mainCharacter.h / 2
+
+		#print("mainCharacter: ", self.model.mainCharacter.x, self.model.mainCharacter.y)
+		#print("camera: ", camera.x, camera.y)
 
 # Dictionary of sprite classes to dynamically instantiate sprites during runtime
 dictOfSpriteClasses = {

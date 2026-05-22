@@ -1,5 +1,6 @@
 import random
 from Sprites import *
+from Util import Direction
 
 class Model():
 	def __init__(self, screen, screenSize):
@@ -10,7 +11,8 @@ class Model():
 		self.sprites = [] # Main list of sprites
 		self.spriteListBuffer = [] # List of sprites that need to be added to main sprite list
 		self.mainCharacter = MainCharacter(camera.width / 2 - 128 ,camera.width / 2, self) 	# value "128" is half the width of the mainCharacter image	
-		self.sprites.append(self.mainCharacter)   
+		self.sprites.append(self.mainCharacter) 
+		self.currentMapSize = (0, 0)
 
 		# Toggle Hitbox mode on/off
 		self.hitBoxModeOn = False
@@ -68,7 +70,7 @@ class Model():
 						elif isinstance(sprite,Slime,) and isinstance(sprite2, Slime):
 							collisionResult = self.circleContactWithSprite(sprite, sprite2)
 							if collisionResult[0]:	
-								sprite.collideWithSprite(sprite2, collisionResult[1], collisionResult[2])
+								sprite.circleCollideWithSprite(sprite2, collisionResult[1], collisionResult[2])
 						else:
 							if self.contactWithSprite(sprite, sprite2): 
 								sprite.collideWithSprite(sprite2)
@@ -87,20 +89,75 @@ class Model():
 		for sprite in self.sprites:
 			if sprite.isActive == False:
 				self.sprites.remove(sprite)
-
+	
 	# Returns true if sprite a is in contact with sprite b	
 	def contactWithSprite(self, a, b):
-		if a.x + a.hitboxLeft + (a.w + a.hitboxW) < b.x + b.hitboxLeft:
+		collisionOffsets = self.calculateCollisionOffsets(a, b)		
+		collisionOffsetX = collisionOffsets[0]
+		collisionOffsetY = collisionOffsets[1]
+						
+		if a.x + a.hitboxLeft + (a.w + a.hitboxW) < b.x + b.hitboxLeft + collisionOffsetX:
 			return False
-		if a.x + a.hitboxLeft > b.x + b.hitboxLeft + (b.w + b.hitboxW):
+		if a.x + a.hitboxLeft > b.x + b.hitboxLeft + (b.w + b.hitboxW) + collisionOffsetX:
 			return False
-		if a.y + a.hitboxTop +(a.h + a.hitboxH) < b.y + b.hitboxTop: # assumes bigger is downward
+		if a.y + a.hitboxTop +(a.h + a.hitboxH) < b.y + b.hitboxTop + collisionOffsetY: 
 			return False
-		if a.y + a.hitboxTop > b.y + b.hitboxTop + (b.h + b.hitboxH): # assumes bigger is downward
+		if a.y + a.hitboxTop > b.y + b.hitboxTop + (b.h + b.hitboxH) + collisionOffsetY: 
 			return False
 		
 		return True
 	
+	# Determine if map size should be added to sprite b during rectangle collision detection
+	def calculateCollisionOffsets(self, a, b):
+		collisionOffsetY = 0
+		collisionOffsetX = 0
+		
+		# Determine whether b.y is closer to 0 or screenSize y
+		compareZeroX = abs(0 - b.x)
+		compareScreenSizeX = abs(self.screenSize[0] - b.x)
+		compareZeroY = abs(0 - b.y)
+		compareScreenSizeY = abs(self.screenSize[1] - b.y)
+			
+		# Adjust collisionOffsetY based on conditions
+		if compareZeroY < compareScreenSizeY and a.moduloEventUp == True:
+			collisionOffsetY = self.currentMapSize[1]
+		elif compareZeroY > compareScreenSizeY and a.moduloEventDown == True:
+			collisionOffsetY = -self.currentMapSize[1]
+		else:
+			collisionOffsetY = 0
+		
+		# Adjust collisionOffsetX based on conditions
+		if compareZeroX < compareScreenSizeX and a.moduloEventLeft == True:
+			collisionOffsetX = self.currentMapSize[0]
+		elif compareZeroX > compareScreenSizeX and a.moduloEventRight == True:
+			collisionOffsetX = -self.currentMapSize[0]
+		else:
+			collisionOffsetX = 0
+
+		return (collisionOffsetX, collisionOffsetY)
+	
+	# Determine if map size should be added to sprite b during distance based operations
+	def calculateDistanceOffsets(self, a, b):
+		possibleXOffsets = [0, self.currentMapSize[0], -self.currentMapSize[0]]
+		possibleYOffsets = [0, self.currentMapSize[1], -self.currentMapSize[1]]
+
+		listOfOffsets = []
+
+		for xOffset in possibleXOffsets:
+			for yOffset in possibleYOffsets:
+				listOfOffsets.append((xOffset, yOffset))
+
+		listOfPossibleDist = []
+
+		for x, y in listOfOffsets:
+			dist = a.distVector.distance_to((b.distVector.x + x, b.distVector.y + y))
+			listOfPossibleDist.append([x, y, dist])
+
+		listOfPossibleDist.sort(key=lambda x: x[2])
+		shortestDist = listOfPossibleDist[0]
+
+		return shortestDist
+
 	def maskContactWithSprite(self, a, b):
 		maskA = pygame.mask.from_surface(a.image)
 		maskB = pygame.mask.from_surface(b.image)
@@ -113,8 +170,11 @@ class Model():
 	def circleContactWithSprite(self, a, b):
 		depth = 0
 		normal = pygame.math.Vector2(0,0)
+
+		distOffsets = self.calculateDistanceOffsets(a, b)
+		bWithOffsets = pygame.math.Vector2(b.distVector.x + distOffsets[0], b.distVector.y + distOffsets[1])
 		
-		n = b.distVector - a.distVector
+		n = bWithOffsets - a.distVector
 		distSq = n.length_squared()
 		r2 = a.radius + b.radius
 		radiusSq = r2 * r2
@@ -132,8 +192,7 @@ class Model():
 			normal = pygame.math.Vector2(1,0)
 		
 		return [True, depth, normal]
-		
-		
+				
 	def spriteClicked(self,s, mouse_x, mouse_y):
 		clicked = True
 		if mouse_x < s.x + s.hitboxLeft:
@@ -151,4 +210,3 @@ class Model():
 		for sprite in self.sprites:
 			if sprite.canCollideWithBorder or sprite.canCollideWithSprite:
 				sprite.savePreviousCoordinates()
-
