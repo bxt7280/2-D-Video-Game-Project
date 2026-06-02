@@ -7,40 +7,44 @@ Goals
 
 - find methods to add to sprite class that all sprites might use 
     - SavePreviousCoordinates?
+    - calculateModuloOffsets?
 
 *- Find better way than ctrlKeyPressDelay variable in controller?
     - could use events instead of keypress
 
-- find way to univerallize loading images into spritesheet? (make method for sprite class)
+- Find way to univerallize loading images into spritesheet? (make modular method for sprite class)
 
 - Is the contactWithBorder method in model even needed?
 
 - Perhaps change sprites x and y to vector
 
-*- Work on code to add sprite to screen with mouse clicked
-    *- Maybe take text input from user to determine what sprite to draw
+- Make method to print any text on screen. perhaps in the view
+    - Try to make modular method so printing text is easy
 
-- make method to print any text on screen. perhaps in the view
-
-- Find a way to save current list of sprites using JSON
-
-- Make fixed camera so character is always in the center
-
-- Clean up Controller class
-    - Make sure map editor can be toggled on/off
+- Find a way to save current list of sprites using JSON OR save players meta game data such as upgrades
 
 - Flying Swords
-    *- Generate swords via mainCharacter class
-        *- implement toggle
-        - Swords don't disapear all at once(LOOK AT LATER?)
-    *- Make single image for slime when using mask collision detection
-    *- Make swords pulsate green
-    - Make swords move in and out/Make swords float
-    *- univerallize draw method to keep view from getting cluttered
-    *- move pulsate red implementation to main character class    
+    - Optimize loading of images due to framerate drops
 
+- Add camera and increase size of map
+    - Make sure sprites positions are updated correctly
+- turn character movement in controller into method?
 
-- Create Camera to follow Character
+- Tighten Up Velle's health bar
+
+- Modify draw methods in sprites to not take in a screen parameter?
+
+- Make enemies and projectiles target center of sprite. 
+
+- Determine width of sprites without hardCoding?
+
+- Rename collide with sprite methods to rectCollideWithSprite?
+
+- Break up Sprites.py into separate files
+
+- Make sure mapEditor works with map scroll functionality. (Adding/Removing Sprites)
+
+- Implement quadtree for optimization
 
 TODAY'S GOALS
 - Find a way to load a map created with third party program
@@ -49,46 +53,12 @@ TODAY'S GOALS
     *- use pytmx library
     *- make a map class with instance of tmx_data
     *- make function to draw tiles
-    - experiment with collision and custom properties
+    - experiment with border/obstactle collision 
         - make a method that will return collidiable tiles as invisible sprites
+        - rename border class in sprite to obstactle
+        - modify border class to adjust size when instanciated. 
     - experiment with enemy placement via tiled. 
         - make method that will add enemy sprites to main sprites list in model class
-
-- Add camera and increase size of map
-    - Make sure sprites positions are updated correctly
-- turn character movement in controller into method?
-
-- Tighten Up Velle's health bar
-
-- Add buttons for spells
-    - Create button as own class.
-        - instance variables include image
-        - will have its own update method
-        - will glow a color if activated
-        - add text that will represent cooldown? or create bar above icon/button
-        - Turn greyscale if unable to cast? Make spell uncastable if activated too long? (ex. swords, and lightning)
-    - Have a list of buttons in view to be updated every frame
-    - Use sprite clicked logic to turn off and on
-
-- Modify draw methods in sprites to not take in a screen parameter?
-
-- Make enemies and projectiles target center of sprite. 
-
-- Modify Rectangle collision resolution to use sides of rectangle
-
-- Determine width of sprites without hardCoding
-
-- Update slime to support infinite map scroll
-    - Add modulo event booleans
-    - Slime needs method to determine modulo events. Use code from controller.
-        - Perhaps move same code to mainCharacter. 
-    - In order to track character determine shortest distance to character in both x and y directions.
-
-- Address issue when sprite has barely crossed border and disappears
-    - Make camera bigger than map size?
-
-- Rename collide with sprite methods to rectCollideWithSprite
-
-
+*- resolve rect collision resolution catching issue
 
         

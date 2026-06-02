@@ -20,14 +20,25 @@ class Model():
 		# slimeClass = Slime
 		# testSlime = slimeClass(200, 350, self)
 		# self.sprites.append(testSlime)
+
+		self.sprites.append(Slime(200, 200, self))
+		self.sprites.append(Slime(264, 200, self))
+		self.sprites.append(Slime(200, 264, self))
+		self.sprites.append(Slime(264, 264, self))
 		# self.sprites.append(HomingFireball(700, 700, self, testSlime))
 
 
 		# for i in range(30):
 		# 	self.sprites.append(Slime(random.randrange(0,800), random.randrange(0, 500), self))
 
-		# self.sprites.append(Border(50, 50)) # Use as an invisible border on top of tile maps. Experimental.
-		# self.sprites.append(Border(100, 0))
+		self.sprites.append(Border(450, 400)) # Use as an invisible border on top of tile maps. Experimental.
+		self.sprites.append(Border(450, 450))
+		self.sprites.append(Border(500, 400))
+		self.sprites.append(Border(500, 450))
+		self.sprites.append(Border(450, 500)) # Use as an invisible border on top of tile maps. Experimental.
+		self.sprites.append(Border(450, 550))
+		self.sprites.append(Border(500, 500))
+		self.sprites.append(Border(500, 550))
 	def update(self):
 		# Update all sprites
 		self.updateAllSprites()
@@ -71,9 +82,10 @@ class Model():
 							collisionResult = self.circleContactWithSprite(sprite, sprite2)
 							if collisionResult[0]:	
 								sprite.circleCollideWithSprite(sprite2, collisionResult[1], collisionResult[2])
+						# Rectangle Collision
 						else:
 							if self.contactWithSprite(sprite, sprite2): 
-								sprite.collideWithSprite(sprite2)
+								sprite.rectCollideWithSprite(sprite2)
 						
 		# mainCharacter will pulsate red if at least one collision
 		if self.mainCharacter.collisionCount <= 0:
@@ -100,7 +112,7 @@ class Model():
 			return False
 		if a.x + a.hitboxLeft > b.x + b.hitboxLeft + (b.w + b.hitboxW) + collisionOffsetX:
 			return False
-		if a.y + a.hitboxTop +(a.h + a.hitboxH) < b.y + b.hitboxTop + collisionOffsetY: 
+		if a.y + a.hitboxTop + (a.h + a.hitboxH) < b.y + b.hitboxTop + collisionOffsetY: 
 			return False
 		if a.y + a.hitboxTop > b.y + b.hitboxTop + (b.h + b.hitboxH) + collisionOffsetY: 
 			return False
@@ -162,7 +174,9 @@ class Model():
 		maskA = pygame.mask.from_surface(a.image)
 		maskB = pygame.mask.from_surface(b.image)
 
-		if maskA.overlap(maskB, (b.x - a.x, b.y - a.y)):
+		distOffsets = self.calculateDistanceOffsets(a, b)
+
+		if maskA.overlap(maskB, (b.x + distOffsets[0] - a.x, b.y + distOffsets[1] - a.y)):
 			return True
 		else:
 			return False

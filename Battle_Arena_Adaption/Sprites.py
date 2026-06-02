@@ -7,7 +7,9 @@ from Util import Direction, SpriteSheet, camera
 class Sprite():
 	def __init__(self, xPos, yPos, w, h, canCollideWithBorder, canCollideWithSprite):
 		self.x = xPos 
-		self.y = yPos 
+		self.y = yPos
+		self.px = 0
+		self.py = 0 
 		self.w = w
 		self.h = h
 		self.canCollideWithBorder = canCollideWithBorder
@@ -15,17 +17,65 @@ class Sprite():
 		self.isActive = True 
 		self.currentSpriteSheet = 0
 		self.currentSpriteCellIndex = 0
+		
 		# Collision/Hitbox Offsets
 		self.hitboxLeft = 0
 		self.hitboxTop = 0
 		self.hitboxW = 0
 		self.hitboxH = 0
+		
+		# Booleans to determine direction sprite was moving when modulo calculation occurs
+		self.moduloEventUp = False
+		self.moduloEventDown = False		
+		self.moduloEventLeft = False
+		self.moduloEventRight = False
+
+	def savePreviousCoordinates(self):
+		self.px = self.x
+		self.py = self.y	
+
+	def calculateModuloEvents(self):
+		# Determine what direction sprite was moving when crossing the border of the map
+		if self.x < 0:			
+			self.moduloEventLeft = True
+
+		if self.x > self.model.currentMapSize[0]:
+			self.moduloEventRight = True 
+
+		self.x = self.x % self.model.currentMapSize[0] # Perform modulo operation due to map scrolling 
+
+		if self.y < 0:
+			self.moduloEventUp = True	
+
+		if self.y > self.model.currentMapSize[1]:
+			self.moduloEventDown = True	
+		
+		self.y = self.y % self.model.currentMapSize[1]
+
+		# Reset modulo events if sprite crosses a certain point
+		if self.x + self.w < self.model.currentMapSize[0] - self.model.currentMapSize[0] / 8:
+			self.moduloEventLeft = False
+		if self.x + self.w >= self.model.currentMapSize[0] - self.model.currentMapSize[0] / 8:
+			self.moduloEventLeft = True
+
+		if self.x > self.model.currentMapSize[0] / 8:
+			self.moduloEventRight = False
+		if self.x <= self.model.currentMapSize[0] / 8:
+			self.moduloEventRight = True
+
+		if self.y + self.h < self.model.currentMapSize[1] - self.model.currentMapSize[1] / 8:
+			self.moduloEventUp = False
+		if self.y + self.h >= self.model.currentMapSize[1] - self.model.currentMapSize[1] / 8:
+			self.moduloEventUp = True
+
+		if self.y > self.model.currentMapSize[1] / 8:
+			self.moduloEventDown = False
+		if self.y <= self.model.currentMapSize[1] / 8:
+			self.moduloEventDown = True
 
 class MainCharacter(Sprite):
 	def __init__(self, xPos, yPos, model):
 		super(MainCharacter, self).__init__(xPos, yPos, 256, 256, True, True)
-		self.px = 0
-		self.py = 0
 		self.lightningAttackRecharge = 0
 		self.lightningAttackOn = False
 		self.autoFireballCooldown = 0
@@ -82,13 +132,7 @@ class MainCharacter(Sprite):
 								self.w + self.hitboxW, self.h + self.hitboxH)
 
 		self.hitboxCenter = self.hitboxRect.center
-
-		# Determine if mainCharacter has moved past border of map
-		self.moduloEventUp = False
-		self.moduloEventDown = False		
-		self.moduloEventLeft = False
-		self.moduloEventRight = False	
-		
+	
 	def update(self):
 		# Reset number of collisions
 		self.collisionCount = 0
@@ -123,11 +167,6 @@ class MainCharacter(Sprite):
 			for sword in self.listOfActiveSwords:
 				sword.isActive = False
 			self.listOfActiveSwords.clear()
-
-		# print("up:", self.moduloEventUp)
-		# print("down: ", self.moduloEventDown)
-		# print("left: ", self.moduloEventLeft)
-		# print("right: ", self.moduloEventRight)
 
 	def draw(self, screen):
 		if self.pulsateRed == True:
@@ -277,7 +316,7 @@ class MainCharacter(Sprite):
 		# Past the border, but previously on left hand side of the border
 		if self.x + self.hitboxLeft + (self.w + self.hitboxW) >= screenSize[0] and self.px + self.hitboxLeft + (self.w + self.hitboxW) <= screenSize[0]:
 			self.x = screenSize[0] - self.hitboxLeft - (self.w + self.hitboxW)	
-		#Past the border, but previously on right hand side of the border
+		# Past the border, but previously on right hand side of the border
 		if self.x + self.hitboxLeft <= 0 and self.px + self.hitboxLeft >= 0:
 			self.x = 0 - self.hitboxLeft
 		# Past the border, but previously above the border
@@ -287,14 +326,42 @@ class MainCharacter(Sprite):
 		if self.y + self.hitboxTop <= 0 and self.py + self.hitboxTop >= 0:
 			self.y = 0 - self.hitboxTop
 
-	def collideWithSprite(self, sprite):
+	def moveCharacter(self, dx, dy):
+		if dx != 0:
+			self.moveSingleAxis(dx, 0)
+		if dy != 0:
+			self.moveSingleAxis(0, dy)
+
+	def moveSingleAxis(self, dx, dy):
+		self.x += dx
+		self.y += dy
+
+		for sprite in self.model.sprites:
+			if isinstance(sprite, Border):
+				spriteRect = pygame.Rect(sprite.x + sprite.hitboxLeft, sprite.y + sprite.hitboxTop, sprite.w + sprite.hitboxW, sprite.h + sprite.hitboxH)
+				mainCharRect = pygame.Rect(self.x + self.hitboxLeft, self.y + self.hitboxTop, self.w + self.hitboxW, self.h + self.hitboxH)
+				if mainCharRect.colliderect(spriteRect):
+					if dx > 0: # Moving right; Hit the left side of the wall
+						mainCharRect.right = spriteRect.left
+						self.x = mainCharRect.x - self.hitboxLeft
+					if dx < 0: # Moving left; Hit the right side of the wall
+						mainCharRect.left = spriteRect.right
+						self.x = mainCharRect.x - self.hitboxLeft
+					if dy > 0: # Moving down; Hit the top side of the wall
+						mainCharRect.bottom = spriteRect.top
+						self.y = mainCharRect.y - self.hitboxTop
+					if dy < 0: # Moving up; Hit the bottom side of the wall
+						mainCharRect.top = spriteRect.bottom
+						self.y = mainCharRect.y - self.hitboxTop
+
+	def rectCollideWithSprite(self, sprite):
 		if isinstance(sprite, Slime):
 			self.collisionCount += 1
 			if self.hp > 0:
 				self.hp -= 1
 
-		# ORIGINAL SPRITE COLLISION
-		# In the sprite, but previously on left hand side of the sprite
+		# # ORIGINAL SPRITE COLLISION
+		# #In the sprite, but previously on left hand side of the sprite
 		# if self.x + self.hitboxLeft + (self.w + self.hitboxW) >= sprite.x + sprite.hitboxLeft and self.px + self.hitboxLeft + (self.w + self.hitboxW) <= sprite.x + sprite.hitboxLeft:
 		# 	self.x = sprite.x + sprite.hitboxLeft - self.hitboxLeft	- (self.w + self.hitboxW)	
 		# # In the sprite, but previously on right hand side of the sprite
@@ -307,49 +374,6 @@ class MainCharacter(Sprite):
 		# if self.y + self.hitboxTop <= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) and self.py + self.hitboxTop >= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH):
 		# 	self.y = sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) - self.hitboxTop
 	
-	def calculateModuloEvents(self):
-		# Determine what direction sprite was moving when crossing the border of the map
-		if self.x < 0:			
-			self.moduloEventLeft = True
-
-		if self.x > self.model.currentMapSize[0]:
-			self.moduloEventRight = True 
-
-		self.x = self.x % self.model.currentMapSize[0] # Perform modulo operation due to map scrolling 
-
-		if self.y < 0:
-			self.moduloEventUp = True	
-
-		if self.y > self.model.currentMapSize[1]:
-			self.moduloEventDown = True	
-		
-		self.y = self.y % self.model.currentMapSize[1]
-
-		# Reset modulo events if sprite crosses a certain point
-		if self.x + self.w < self.model.currentMapSize[0] - self.model.currentMapSize[0] / 8:
-			self.moduloEventLeft = False
-		if self.x + self.w >= self.model.currentMapSize[0] - self.model.currentMapSize[0] / 8:
-			self.moduloEventLeft = True
-
-		if self.x > self.model.currentMapSize[0] / 8:
-			self.moduloEventRight = False
-		if self.x <= self.model.currentMapSize[0] / 8:
-			self.moduloEventRight = True
-
-		if self.y + self.h < self.model.currentMapSize[1] - self.model.currentMapSize[1] / 8:
-			self.moduloEventUp = False
-		if self.y + self.h >= self.model.currentMapSize[1] - self.model.currentMapSize[1] / 8:
-			self.moduloEventUp = True
-
-		if self.y > self.model.currentMapSize[1] / 8:
-			self.moduloEventDown = False
-		if self.y <= self.model.currentMapSize[1] / 8:
-			self.moduloEventDown = True
-
-	def savePreviousCoordinates(self):
-		self.px = self.x
-		self.py = self.y
-		
 	# Changes direction. If invaild input defaults to "IDLE"
 	def changeDirection(self, direction):
 		match direction:
@@ -482,7 +506,8 @@ class MainCharacter(Sprite):
 				closestDistanceFromChar = 1000
 				closestSlimeIndex = 0
 				for i in range(len(listOfSlimes)):
-					if self.distVector.distance_to(listOfSlimes[i].distVector) < closestDistanceFromChar:
+					shortestDist = self.model.calculateDistanceOffsets(self, listOfSlimes[i])
+					if self.distVector.distance_to((listOfSlimes[i].distVector.x + shortestDist[0], listOfSlimes[i].distVector.y + shortestDist[1])) < closestDistanceFromChar:
 						closestDistanceFromChar = self.distVector.distance_to(listOfSlimes[i].distVector)
 						closestSlimeIndex = i
 
@@ -503,8 +528,6 @@ class Fireball(Sprite):
 	def __init__(self, xPos, yPos, direction, model):
 		super(Fireball, self).__init__(xPos, yPos, 47, 47, True, True)
 		self.vert_vel = 5.0
-		self.px = 0
-		self.py = 0
 		self.direction = direction
 		self.model = model
 		
@@ -518,10 +541,40 @@ class Fireball(Sprite):
 		
 	def update(self):
 		self.moveFireball()
+		self.calculateModuloEvents()
 		
 	def draw(self, screen):
+		# Follows same pattern as drawMap method in View Class
+		# Center Image
 		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - camera.x, self.y - camera.y)
+	
+		# Moving Right
+		if camera.x + camera.width > self.model.currentMapSize[0]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y - camera.y)
+		# Moving Left
+		if camera.x < 0 + self.w: # added width of sprite so it doesn't disappear from screen when moving left
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y - camera.y)
+		# Moving Up
+		if camera.y < 0 + self.h:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x -camera.x, self.y - self.model.currentMapSize[1] - camera.y)
+		# Moving Down
+		if camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x -camera.x, self.y + self.model.currentMapSize[1] - camera.y)
 
+		# Diagonals
+		# Right-Up
+		if camera.x + camera.width > self.model.currentMapSize[0] and camera.y < 0 + self.h:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y - self.model.currentMapSize[1] - camera.y)		
+		# Right-Down
+		if camera.x + camera.width > self.model.currentMapSize[0] and camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y + self.model.currentMapSize[1] - camera.y)			
+		# Left-Up
+		if camera.x < 0 + self.w and camera.y < 0 + self.h:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y - self.model.currentMapSize[1] - camera.y)		
+		# Left-Down
+		if camera.x < 0 + self.w and camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y + self.model.currentMapSize[1] - camera.y)	
+	
 	# Changes direction. If invaild input defaults to "NEUTRAL" Currently Not Used. Might use to bounce off walls.
 	def changeDirection(self, direction):
 		match direction:
@@ -588,7 +641,7 @@ class Fireball(Sprite):
 			self.explode()	
 			self.isActive = False
 
-	def collideWithSprite(self, sprite):
+	def rectCollideWithSprite(self, sprite):
 			if not(isinstance(sprite, MainCharacter)) and isinstance(sprite, Slime):
 				self.isActive = False
 				self.explode()		
@@ -596,16 +649,10 @@ class Fireball(Sprite):
 	def explode(self):
 		self.model.spriteListBuffer.append(FireballExplosion(self.x - 27, self.y - 25, self.model))
 
-	def savePreviousCoordinates(self):
-		self.px = self.x
-		self.py = self.y
-
 class HomingFireball(Sprite):
 	def __init__(self, xPos, yPos, model, targetSprite):
 		super(HomingFireball, self).__init__(xPos, yPos, 47, 47, True, True)
 		self.vert_vel = 5.0
-		self.px = 0
-		self.py = 0
 		self.model = model
 		self.targetSprite = targetSprite
 		self.distVector = pygame.math.Vector2(self.x, self.y)
@@ -625,16 +672,53 @@ class HomingFireball(Sprite):
 		self.distVector.y = self.y + self.hitboxTop
 		
 		if self.targetSprite.isActive == True:
-			self.distVector.move_towards_ip(self.targetSprite.distVector, 5 + self.vert_vel)
-			self.x = self.distVector.x
-			self.y = self.distVector.y
+			self.trackTarget()
 		else:
 			self.explode()
 			self.isActive = False
 
 	def draw(self, screen):
+		# Follows same pattern as drawMap method in View Class
+		# Center Image
 		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - camera.x, self.y - camera.y)
+	
+		# Moving Right
+		if camera.x + camera.width > self.model.currentMapSize[0]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y - camera.y)
+		# Moving Left
+		if camera.x < 0 + self.w: # added width of sprite so it doesn't disappear from screen when moving left
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y - camera.y)
+		# Moving Up
+		if camera.y < 0 + self.h:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x -camera.x, self.y - self.model.currentMapSize[1] - camera.y)
+		# Moving Down
+		if camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x -camera.x, self.y + self.model.currentMapSize[1] - camera.y)
+
+		# Diagonals
+		# Right-Up
+		if camera.x + camera.width > self.model.currentMapSize[0] and camera.y < 0 + self.h:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y - self.model.currentMapSize[1] - camera.y)		
+		# Right-Down
+		if camera.x + camera.width > self.model.currentMapSize[0] and camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y + self.model.currentMapSize[1] - camera.y)			
+		# Left-Up
+		if camera.x < 0 + self.w and camera.y < 0 + self.h:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y - self.model.currentMapSize[1] - camera.y)		
+		# Left-Down
+		if camera.x < 0 + self.w and camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y + self.model.currentMapSize[1] - camera.y)	
 		
+	def trackTarget(self):
+		shortestDist = self.model.calculateDistanceOffsets(self, self.targetSprite)		
+		targetDest = pygame.math.Vector2(self.targetSprite.distVector.x + shortestDist[0], self.targetSprite.distVector.y + shortestDist[1])
+		
+		self.distVector.move_towards_ip(targetDest, 5 + self.vert_vel)
+		self.x = self.distVector.x
+		self.y = self.distVector.y
+		
+		self.calculateModuloEvents()
+	
 	def collideWithBorder(self, screenSize):
 		# Past the border, but previously on left hand side of the border
 		if self.x + self.hitboxLeft + (self.w + self.hitboxW) >= screenSize[0] and self.px + self.hitboxLeft + (self.w + self.hitboxW) <= screenSize[0]:
@@ -653,17 +737,13 @@ class HomingFireball(Sprite):
 			self.explode()	
 			self.isActive = False
 
-	def collideWithSprite(self, sprite):
+	def rectCollideWithSprite(self, sprite):
 			if not(isinstance(sprite, MainCharacter)) and isinstance(sprite, Slime):
 				self.isActive = False
 				self.explode()		
 
 	def explode(self):
 		self.model.spriteListBuffer.append(FireballExplosion(self.x - 27, self.y - 25, self.model))
-
-	def savePreviousCoordinates(self):
-		self.px = self.x
-		self.py = self.y
 
 class FireballExplosion(Sprite):
 	def __init__(self, xPos, yPos, model):
@@ -684,7 +764,36 @@ class FireballExplosion(Sprite):
 		self.animate()
 
 	def draw(self, screen):
+		# Follows same pattern as drawMap method in View Class
+		# Center Image
 		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - camera.x, self.y - camera.y)
+	
+		# Moving Right
+		if camera.x + camera.width > self.model.currentMapSize[0]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y - camera.y)
+		# Moving Left
+		if camera.x < 0 + self.w: # added width of sprite so it doesn't disappear from screen when moving left
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y - camera.y)
+		# Moving Up
+		if camera.y < 0 + self.h:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x -camera.x, self.y - self.model.currentMapSize[1] - camera.y)
+		# Moving Down
+		if camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x -camera.x, self.y + self.model.currentMapSize[1] - camera.y)
+
+		# Diagonals
+		# Right-Up
+		if camera.x + camera.width > self.model.currentMapSize[0] and camera.y < 0 + self.h:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y - self.model.currentMapSize[1] - camera.y)		
+		# Right-Down
+		if camera.x + camera.width > self.model.currentMapSize[0] and camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y + self.model.currentMapSize[1] - camera.y)			
+		# Left-Up
+		if camera.x < 0 + self.w and camera.y < 0 + self.h:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y - self.model.currentMapSize[1] - camera.y)		
+		# Left-Down
+		if camera.x < 0 + self.w and camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y + self.model.currentMapSize[1] - camera.y)	
 		
 	def animate(self):
 		self.currentSpriteCellIndex += 1
@@ -716,7 +825,36 @@ class LightningBolt(Sprite):
 		self.animate()
 
 	def draw(self, screen):
+		# Follows same pattern as drawMap method in View Class
+		# Center Image
 		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - camera.x, self.y - camera.y)
+	
+		# Moving Right
+		if camera.x + camera.width > self.model.currentMapSize[0]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y - camera.y)
+		# Moving Left
+		if camera.x < 0 + self.w: # added width of sprite so it doesn't disappear from screen when moving left
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y - camera.y)
+		# Moving Up
+		if camera.y < 0 + self.h:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x -camera.x, self.y - self.model.currentMapSize[1] - camera.y)
+		# Moving Down
+		if camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x -camera.x, self.y + self.model.currentMapSize[1] - camera.y)
+
+		# Diagonals
+		# Right-Up
+		if camera.x + camera.width > self.model.currentMapSize[0] and camera.y < 0 + self.h:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y - self.model.currentMapSize[1] - camera.y)		
+		# Right-Down
+		if camera.x + camera.width > self.model.currentMapSize[0] and camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y + self.model.currentMapSize[1] - camera.y)			
+		# Left-Up
+		if camera.x < 0 + self.w and camera.y < 0 + self.h:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y - self.model.currentMapSize[1] - camera.y)		
+		# Left-Down
+		if camera.x < 0 + self.w and camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y + self.model.currentMapSize[1] - camera.y)	
 		
 	def animate(self):
 		self.currentSpriteCellIndex += 1
@@ -747,7 +885,36 @@ class BloodSplatter(Sprite):
 		self.animate()
 
 	def draw(self, screen):
-		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - camera.x , self.y - camera.y)
+		# Follows same pattern as drawMap method in View Class
+		# Center Image
+		self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - camera.x, self.y - camera.y)
+	
+		# Moving Right
+		if camera.x + camera.width > self.model.currentMapSize[0]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y - camera.y)
+		# Moving Left
+		if camera.x < 0 + self.w: # added width of sprite so it doesn't disappear from screen when moving left
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y - camera.y)
+		# Moving Up
+		if camera.y < 0 + self.h:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x -camera.x, self.y - self.model.currentMapSize[1] - camera.y)
+		# Moving Down
+		if camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x -camera.x, self.y + self.model.currentMapSize[1] - camera.y)
+
+		# Diagonals
+		# Right-Up
+		if camera.x + camera.width > self.model.currentMapSize[0] and camera.y < 0 + self.h:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y - self.model.currentMapSize[1] - camera.y)		
+		# Right-Down
+		if camera.x + camera.width > self.model.currentMapSize[0] and camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y + self.model.currentMapSize[1] - camera.y)			
+		# Left-Up
+		if camera.x < 0 + self.w and camera.y < 0 + self.h:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y - self.model.currentMapSize[1] - camera.y)		
+		# Left-Down
+		if camera.x < 0 + self.w and camera.y + camera.height > self.model.currentMapSize[1]:
+			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y + self.model.currentMapSize[1] - camera.y)	
 		
 	def animate(self):
 		self.currentSpriteCellIndex += 1
@@ -760,8 +927,6 @@ class Slime(Sprite):
 	def __init__(self, xPos, yPos, model):
 		super(Slime, self).__init__(xPos, yPos, 64, 64, True, True)
 		self.model = model
-		self.px = 0
-		self.py = 0
 		self.provoked = False
 		self.provokedCounter = 0
 		self.isHurt = False
@@ -800,41 +965,12 @@ class Slime(Sprite):
 		self.hitboxCenter = self.hitboxRect.center
 		self.radius = 30
 
-		# Determine if slime has moved past border of map
-		self.moduloEventUp = False
-		self.moduloEventDown = False		
-		self.moduloEventLeft = False
-		self.moduloEventRight = False	
-
 	def update(self):
 		# Update distance vector
 		self.distVector.x = self.x + self.hitboxLeft
 		self.distVector.y = self.y + self.hitboxTop
-
-		# Have slime follow mainCharacter based on conditions
-		# if self.provoked == True and self.provokedCounter > 0:
-		# 	if self.distVector.distance_to(self.model.mainCharacter.distVector) <= 150:
-		# 		self.distVector.move_towards_ip(self.model.mainCharacter.distVector, 5)
-		# 		self.x = self.distVector.x
-		# 		self.y = self.distVector.y
-
-		# 	if self.distVector.distance_to(self.model.mainCharacter.distVector) <= 1000:
-		# 		self.distVector.move_towards_ip(self.model.mainCharacter.distVector, 3)
-		# 		self.x = self.distVector.x
-		# 		self.y = self.distVector.y
-			
-		# 	self.provokedCounter -= 1
-
-		# if self.provokedCounter == 0:
-		# 	self.provoked = False
-
-		# if self.provoked == False:
-		# 	self.distVector.distance_to(self.originalPos)
-		# 	self.distVector.move_towards_ip(self.originalPos, 5)
-		# 	self.x = self.distVector.x
-		# 	self.y = self.distVector.y
-		
-		self.trackMainCharacter()
+	
+		#self.trackMainCharacter()
 
 		# Update hitboxRect and hitboxCenter
 		self.hitboxRect = pygame.Rect(self.x + self.hitboxLeft, self.y + self.hitboxTop, 
@@ -849,17 +985,7 @@ class Slime(Sprite):
 				self.isActive = False
 			self.deathCounter -= 1
 
-
-		# Adjust coordinates if exceeds map size 
-		#self.calculateModuloEvents()
-		# print("up:", self.moduloEventUp)
-		# print("down: ", self.moduloEventDown)
-		# print("left: ", self.moduloEventLeft)
-		# print("right: ", self.moduloEventRight)
-
 		self.animate()
-
-		#print("Slime: ", self.x, self.y)	
 
 	def draw(self, screen):
 		# Follows same pattern as drawMap method in View Class
@@ -870,10 +996,10 @@ class Slime(Sprite):
 		if camera.x + camera.width > self.model.currentMapSize[0]:
 			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y - camera.y)
 		# Moving Left
-		if camera.x < 0:
+		if camera.x < 0 + self.w: # added width of sprite so it doesn't disappear from screen when moving left
 			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y - camera.y)
 		# Moving Up
-		if camera.y < 0:
+		if camera.y < 0 + self.h:
 			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x -camera.x, self.y - self.model.currentMapSize[1] - camera.y)
 		# Moving Down
 		if camera.y + camera.height > self.model.currentMapSize[1]:
@@ -881,56 +1007,17 @@ class Slime(Sprite):
 
 		# Diagonals
 		# Right-Up
-		if camera.x + camera.width > self.model.currentMapSize[0] and camera.y < 0:
+		if camera.x + camera.width > self.model.currentMapSize[0] and camera.y < 0 + self.h:
 			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y - self.model.currentMapSize[1] - camera.y)		
 		# Right-Down
 		if camera.x + camera.width > self.model.currentMapSize[0] and camera.y + camera.height > self.model.currentMapSize[1]:
 			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x + self.model.currentMapSize[0] - camera.x, self.y + self.model.currentMapSize[1] - camera.y)			
 		# Left-Up
-		if camera.x < 0 and camera.y < 0:
+		if camera.x < 0 + self.w and camera.y < 0 + self.h:
 			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y - self.model.currentMapSize[1] - camera.y)		
 		# Left-Down
-		if camera.x < 0 and camera.y + camera.height > self.model.currentMapSize[1]:
+		if camera.x < 0 + self.w and camera.y + camera.height > self.model.currentMapSize[1]:
 			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y + self.model.currentMapSize[1] - camera.y)	
-
-	def calculateModuloEvents(self):
-		# Determine what direction sprite was moving when crossing the border of the map
-		if self.x < 0:			
-			self.moduloEventLeft = True
-
-		if self.x > self.model.currentMapSize[0]:
-			self.moduloEventRight = True 
-
-		self.x = self.x % self.model.currentMapSize[0] # Perform modulo operation due to map scrolling 
-
-		if self.y < 0:
-			self.moduloEventUp = True	
-
-		if self.y > self.model.currentMapSize[1]:
-			self.moduloEventDown = True	
-		
-		self.y = self.y % self.model.currentMapSize[1]
-
-		# Reset modulo events if sprite crosses a certain point
-		if self.x + self.w < self.model.currentMapSize[0] - self.model.currentMapSize[0] / 8:
-			self.moduloEventLeft = False
-		if self.x + self.w >= self.model.currentMapSize[0] - self.model.currentMapSize[0] / 8:
-			self.moduloEventLeft = True
-
-		if self.x > self.model.currentMapSize[0] / 8:
-			self.moduloEventRight = False
-		if self.x <= self.model.currentMapSize[0] / 8:
-			self.moduloEventRight = True
-
-		if self.y + self.h < self.model.currentMapSize[1] - self.model.currentMapSize[1] / 8:
-			self.moduloEventUp = False
-		if self.y + self.h >= self.model.currentMapSize[1] - self.model.currentMapSize[1] / 8:
-			self.moduloEventUp = True
-
-		if self.y > self.model.currentMapSize[1] / 8:
-			self.moduloEventDown = False
-		if self.y <= self.model.currentMapSize[1] / 8:
-			self.moduloEventDown = True
 
 	def trackMainCharacter(self):
 		shortestDist = self.model.calculateDistanceOffsets(self, self.model.mainCharacter)
@@ -979,7 +1066,7 @@ class Slime(Sprite):
 		if self.y + self.hitboxTop <= 0 and self.py + self.hitboxTop >= 0:
 			self.y = 0 - self.hitboxTop
 
-	def collideWithSprite(self, sprite, depth = None, normal = None):
+	def rectCollideWithSprite(self, sprite):
 		if isinstance(sprite, Fireball) or isinstance(sprite, HomingFireball) and self.isDying == False: 		
 			self.isHurt = True
 			self.isHurtCounter = 20
@@ -987,24 +1074,6 @@ class Slime(Sprite):
 			self.provokedCounter = 150
 			self.isDying = True
 			self.deathCounter = 20
-
-		# if isinstance(sprite, MainCharacter):
-		# 	print("slime contact with main character.")
-
-		# Rectangle collision resolution between sprites
-		# if isinstance(sprite, Slime):
-		# 	# In the sprite, but previously on left hand side of the sprite
-		# 	if self.x + self.hitboxLeft + (self.w + self.hitboxW) >= sprite.x + sprite.hitboxLeft and self.px + self.hitboxLeft + (self.w + self.hitboxW) <= sprite.x + sprite.hitboxLeft:
-		# 		self.x = sprite.x + sprite.hitboxLeft - self.hitboxLeft	- (self.w + self.hitboxW)	
-		# 	# In the sprite, but previously on right hand side of the sprite
-		# 	if self.x + self.hitboxLeft <= sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW) and self.px + self.hitboxLeft >= sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW):
-		# 		self.x = sprite.x + sprite.hitboxLeft + (sprite.w + sprite.hitboxW) - self.hitboxLeft
-		# 	# In the sprite, but previously above the sprite
-		# 	if self.y + self.hitboxTop +(self.h + self.hitboxH) >= sprite.y + sprite.hitboxTop and self.py + self.hitboxTop + (self.h + self.hitboxH) <= sprite.y + sprite.hitboxTop:
-		# 		self.y = sprite.y + sprite.hitboxTop - self.hitboxTop - (self.h + self.hitboxH)
-		# 	# In the sprite, but previously below the sprite
-		# 	if self.y + self.hitboxTop <= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) and self.py + self.hitboxTop >= sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH):
-		# 		self.y = sprite.y + sprite.hitboxTop + (sprite.h + sprite.hitboxH) - self.hitboxTop
 
 	def circleCollideWithSprite(self, sprite, depth = None, normal = None):
 		if isinstance(sprite, Slime):
@@ -1020,7 +1089,6 @@ class Slime(Sprite):
 		self.y = self.distVector.y
 		self.calculateModuloEvents()
 
-	# Experiment with mask collision
 	def maskCollideWithSprite(self, sprite):
 		if isinstance(sprite, FlyingSword) and self.isDying == False: 	
 			self.isHurt = True
@@ -1040,15 +1108,10 @@ class Slime(Sprite):
 	def bleed(self):
 		self.model.spriteListBuffer.append(BloodSplatter(self.x, self.y, self.model))
 	
-	def savePreviousCoordinates(self):
-		self.px = self.x
-		self.py = self.y
-
 class FlyingSword(Sprite):
 	def __init__(self, xPos, yPos, startingAngle, lengthFromPivot, model):
 		super(FlyingSword, self).__init__(xPos, yPos, 124, 23, False, True)
-		self.px = 0
-		self.py = 0
+		self.distVector = pygame.math.Vector2(self.x, self.y)
 		self.borderRect = pygame.Rect(xPos, yPos, 124, 23)
 		self.currentAlpha = 255
 		self.alphaDirectionSwitch = True
@@ -1086,6 +1149,10 @@ class FlyingSword(Sprite):
 		
 		self.x = self.rect.x
 		self.y = self.rect.y
+		self.w = self.rect.w
+		self.h = self.rect.h
+		self.distVector.x = self.x
+		self.distVector.y = self.y
 
 	def draw(self, screen):
 		mask = pygame.mask.from_surface(self.image)
@@ -1096,12 +1163,8 @@ class FlyingSword(Sprite):
 		self.image.set_alpha(self.currentAlpha)
 		screen.blit(self.image, (self.rect.x - camera.x, self.rect.y - camera.y, self.rect.width, self.rect.height))
 
-	def collideWithSprite(self, sprite):
+	def rectCollideWithSprite(self, sprite):
 		pass	
-
-	def savePreviousCoordinates(self):
-		self.px = self.x
-		self.py = self.y
 
 	def assignCurrentAlpha(self):
 		if self.alphaDirectionSwitch == True:
@@ -1131,6 +1194,9 @@ class Border(Sprite):
 		self.hitboxTop = 0
 		self.hitboxW = 0
 		self.hitboxH = 0
+
+		self.hitboxRect = pygame.Rect(self.x + self.hitboxLeft, self.y + self.hitboxTop, 
+								self.w + self.hitboxW, self.h + self.hitboxH)
 	def update(self):
 		pass
 

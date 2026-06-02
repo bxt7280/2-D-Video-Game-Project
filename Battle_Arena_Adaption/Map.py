@@ -7,7 +7,6 @@ class Map():
         self.screen = screen
         self.tmxData = load_pygame(path)
         
-
     def draw(self):
         for layer in self.tmxData:
             for tile in layer.tiles():

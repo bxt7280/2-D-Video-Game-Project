@@ -22,8 +22,6 @@ class View():
 		self.user_text = ""
 
 	def update(self):   
-		#print(self.model.mainCharacter.x, self.model.mainCharacter.y)
-		#print(self.camera.x, self.camera.y)
 		self.screen.fill("darkblue") 
 		#self.screen.fill([0,200,100])
 		#self.screen.blit(self.background, (0 - camera.x, 0 - camera.y))
@@ -51,7 +49,37 @@ class View():
 								sprite.y + sprite.hitboxTop - camera.y, sprite.w + sprite.hitboxW, sprite.h + sprite.hitboxH), 1)
 				
 				if isinstance(sprite, Slime):
+					# Follows same pattern as drawMap method 	
+					# Center Image
 					pygame.draw.circle(self.screen, "red", (sprite.hitboxCenter[0] - camera.x, sprite.hitboxCenter[1] - camera.y), sprite.radius, 1)
+					
+					# Moving Right
+					if camera.x + camera.width > self.currentMapSize[0]:
+						pygame.draw.circle(self.screen, "red", (sprite.hitboxCenter[0] + self.currentMapSize[0] - camera.x, sprite.hitboxCenter[1] - camera.y), sprite.radius, 1)			
+					# Moving Left
+					if camera.x < 0 + sprite.w: # added width of sprite so it doesn't disappear from screen when moving left
+						pygame.draw.circle(self.screen, "red", (sprite.hitboxCenter[0] - self.currentMapSize[0] + -camera.x, sprite.hitboxCenter[1] - camera.y), sprite.radius, 1)									
+					# Moving Up
+					if camera.y < 0 + sprite.h:
+						pygame.draw.circle(self.screen, "red", (sprite.hitboxCenter[0] - camera.x, sprite.hitboxCenter[1] - self.currentMapSize[1] - camera.y), sprite.radius, 1)
+					# Moving Down
+					if camera.y + camera.height > self.currentMapSize[1]:
+						pygame.draw.circle(self.screen, "red", (sprite.hitboxCenter[0] - camera.x, sprite.hitboxCenter[1] + self.currentMapSize[1] - camera.y), sprite.radius, 1)
+
+					# Diagonals
+					# Right-Up
+					if camera.x + camera.width > self.currentMapSize[0] and camera.y < 0 + sprite.h:
+						pygame.draw.circle(self.screen, "red", (sprite.hitboxCenter[0] + self.currentMapSize[0] - camera.x, sprite.hitboxCenter[1] - self.currentMapSize[1] - camera.y), sprite.radius, 1)	
+					# Right-Down
+					if camera.x + camera.width > self.currentMapSize[0] and camera.y + camera.height > self.currentMapSize[1]:
+						pygame.draw.circle(self.screen, "red", (sprite.hitboxCenter[0] + self.currentMapSize[0] - camera.x, sprite.hitboxCenter[1] + self.currentMapSize[1] - camera.y), sprite.radius, 1)			
+					# Left-Up
+					if camera.x < 0 + sprite.w and camera.y < 0 + sprite.h:
+						pygame.draw.circle(self.screen, "red", (sprite.hitboxCenter[0] - self.currentMapSize[0] + -camera.x, sprite.hitboxCenter[1] - self.currentMapSize[1] - camera.y), sprite.radius, 1)	
+					# Left-Down
+					if camera.x < 0 + sprite.w and camera.y + camera.height > self.currentMapSize[1]:
+						pygame.draw.circle(self.screen, "red", (sprite.hitboxCenter[0] - self.currentMapSize[0] + -camera.x, sprite.hitboxCenter[1] + self.currentMapSize[1] - camera.y), sprite.radius, 1)
+					
 					#pygame.draw.line(self.screen, "black", (sprite.hitboxCenter[0] - camera.x, sprite.hitboxCenter[1] - camera.y) , 
 					#				(self.model.mainCharacter.distVector.x - camera.x, self.model.mainCharacter.distVector.y - camera.y))
 				
@@ -94,43 +122,27 @@ class View():
 
 		# Moving Right
 		if camera.x + camera.width > self.currentMapSize[0]:
-			#self.currentMap.drawWithOffset(self.currentMapSize[0] - camera.x, -camera.y)
-			#print("right painted")
-			pass
+			self.currentMap.drawWithOffset(self.currentMapSize[0] - camera.x, -camera.y)
 		# Moving Left
 		if camera.x < 0:
-			#self.currentMap.drawWithOffset(-self.currentMapSize[0] + -camera.x, -camera.y)
-			#print("left painted")
-			pass	
+			self.currentMap.drawWithOffset(-self.currentMapSize[0] + -camera.x, -camera.y)
 		# Moving Up
 		if camera.y < 0:
-			#self.currentMap.drawWithOffset(-camera.x, -self.currentMapSize[1] + -camera.y)
-			#print("up painted")
-			pass
+			self.currentMap.drawWithOffset(-camera.x, -self.currentMapSize[1] + -camera.y)
 		# Moving Down
 		if camera.y + camera.height > self.currentMapSize[1]:
-			#self.currentMap.drawWithOffset(-camera.x, self.currentMapSize[1] -camera.y)
-			#print("down painted")
-			pass
+			self.currentMap.drawWithOffset(-camera.x, self.currentMapSize[1] -camera.y)
 
 		# Diagonals				
 		# Right-Up
 		if camera.x + camera.width > self.currentMapSize[0] and camera.y < 0:
-			#self.currentMap.drawWithOffset(self.currentMapSize[0] - camera.x, -self.currentMapSize[1] + -camera.y)	
-			#print("right up painted")
-			pass
+			self.currentMap.drawWithOffset(self.currentMapSize[0] - camera.x, -self.currentMapSize[1] + -camera.y)	
 		# Right-Down
 		if camera.x + camera.width > self.currentMapSize[0] and camera.y + camera.height > self.currentMapSize[1]:
-			#self.currentMap.drawWithOffset(self.currentMapSize[0] - camera.x, self.currentMapSize[1] -camera.y)
-			#print("right down painted")
-			pass 	
+			self.currentMap.drawWithOffset(self.currentMapSize[0] - camera.x, self.currentMapSize[1] -camera.y)
 		# Left-Up
 		if camera.x < 0 and camera.y < 0:
-			#self.currentMap.drawWithOffset(-self.currentMapSize[0] + -camera.x, -self.currentMapSize[1] + -camera.y)
-			#print("left up painted")
-			pass
+			self.currentMap.drawWithOffset(-self.currentMapSize[0] + -camera.x, -self.currentMapSize[1] + -camera.y)
 		# Left-Down
 		if camera.x < 0 and camera.y + camera.height > self.currentMapSize[1]:
-			#self.currentMap.drawWithOffset(-self.currentMapSize[0] + -camera.x, self.currentMapSize[1] -camera.y)
-			#print("left down painted")
-			pass
+			self.currentMap.drawWithOffset(-self.currentMapSize[0] + -camera.x, self.currentMapSize[1] -camera.y)

@@ -12,7 +12,6 @@ class Controller():
 		self.spriteSelectorOn = False
 		self.spriteToBeDrawn = dictOfSpriteClasses["Slime"]
 
-
 	def update(self):
 		for event in pygame.event.get():
 			if event.type == QUIT:
@@ -61,15 +60,17 @@ class Controller():
 						self.view.displayTextSpriteSelect = True
 						print("Sprite Select On")
 
-			# Map Editor Mode
+			# Add/Delete sprite in Map Editor Mode
 			elif event.type == pygame.MOUSEBUTTONUP:
 				self.addOrDeleteSprite()
-					
-		
+							
 		self.evaluateKeyPress()
 
 	def addOrDeleteSprite(self):
 		x, y = pygame.mouse.get_pos()
+		x = x % self.view.currentMapSize[0]
+		y = y % self.view.currentMapSize[1]
+
 		if self.editorToggle == True and len(self.model.sprites) > 0:
 			spriteClicked = None
 			for sprite in self.model.sprites:
@@ -94,47 +95,43 @@ class Controller():
 		if keys[K_UP] or keys[K_DOWN] or keys[K_LEFT] or keys[K_RIGHT]:
 			if keys[K_UP] and keys[K_LEFT]:
 				if not keys[K_LCTRL]:
-					self.model.mainCharacter.x -= 6
-					self.model.mainCharacter.y -= 6
+					self.model.mainCharacter.moveCharacter(-6, -6)
 					self.model.mainCharacter.animateWalk()	
 				self.model.mainCharacter.changeDirection(Direction.UP_LEFT)
 			elif keys[K_DOWN] and keys[K_LEFT]:
 				if not keys[K_LCTRL]:
-					self.model.mainCharacter.x -= 6
-					self.model.mainCharacter.y += 6
+					self.model.mainCharacter.moveCharacter(-6, 6)
 					self.model.mainCharacter.animateWalk()	
 				self.model.mainCharacter.changeDirection(Direction.DOWN_LEFT)
 			elif keys[K_UP] and keys[K_RIGHT]:
 				if not keys[K_LCTRL]:
-					self.model.mainCharacter.x += 6
-					self.model.mainCharacter.y -= 6
+					self.model.mainCharacter.moveCharacter(6, -6)
 					self.model.mainCharacter.animateWalk()				
 				self.model.mainCharacter.changeDirection(Direction.UP_RIGHT)
 			elif keys[K_DOWN] and keys[K_RIGHT]:
 				if not keys[K_LCTRL]:
-					self.model.mainCharacter.x += 6
-					self.model.mainCharacter.y += 6
+					self.model.mainCharacter.moveCharacter(6, 6)
 					self.model.mainCharacter.animateWalk()	
 				self.model.mainCharacter.changeDirection(Direction.DOWN_RIGHT)						
 			elif keys[K_LEFT]:
 				if not keys[K_LCTRL]:
-					self.model.mainCharacter.x -= 6
+					self.model.mainCharacter.moveCharacter(-6, 0)
 					self.model.mainCharacter.animateWalk()
 				self.model.mainCharacter.changeDirection(Direction.LEFT)				
 			elif keys[K_RIGHT]:
-				if not keys[K_LCTRL]:			
-					self.model.mainCharacter.x += 6				
+				if not keys[K_LCTRL]:				
+					self.model.mainCharacter.moveCharacter(6, 0)		
 					self.model.mainCharacter.animateWalk()
 				self.model.mainCharacter.changeDirection(Direction.RIGHT)
 				
 			elif keys[K_UP]:
 				if not keys[K_LCTRL]:			
-					self.model.mainCharacter.y -= 6
+					self.model.mainCharacter.moveCharacter(0, -6)
 					self.model.mainCharacter.animateWalk()
 				self.model.mainCharacter.changeDirection(Direction.UP)
 			elif keys[K_DOWN]:
 				if not keys[K_LCTRL]:
-					self.model.mainCharacter.y += 6
+					self.model.mainCharacter.moveCharacter(0, 6)
 					self.model.mainCharacter.animateWalk()
 				self.model.mainCharacter.changeDirection(Direction.DOWN)		
 		else:
@@ -146,12 +143,8 @@ class Controller():
 		camera.x = self.model.mainCharacter.x - camera.width / 2 + self.model.mainCharacter.w / 2
 		camera.y = self.model.mainCharacter.y - camera.height / 2 + self.model.mainCharacter.h / 2
 
-		#print("mainCharacter: ", self.model.mainCharacter.x, self.model.mainCharacter.y)
-		#print("camera: ", camera.x, camera.y)
-
 # Dictionary of sprite classes to dynamically instantiate sprites during runtime
 dictOfSpriteClasses = {
 	"Slime": Slime,
 	"FireballExplosion": FireballExplosion,
-	"LightningBolt": LightningBolt
 	}
