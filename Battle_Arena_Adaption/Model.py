@@ -12,6 +12,7 @@ class Model():
 		self.spriteListBuffer = [] # List of sprites that need to be added to main sprite list
 		self.mainCharacter = MainCharacter(camera.width / 2 - 128 ,camera.width / 2, self) 	# value "128" is half the width of the mainCharacter image	
 		self.sprites.append(self.mainCharacter) 
+		self.obstacles = []
 		self.currentMapSize = (0, 0)
 
 		# Toggle Hitbox mode on/off
@@ -21,30 +22,22 @@ class Model():
 		# testSlime = slimeClass(200, 350, self)
 		# self.sprites.append(testSlime)
 
-		self.sprites.append(Slime(200, 200, self))
-		self.sprites.append(Slime(264, 200, self))
-		self.sprites.append(Slime(200, 264, self))
-		self.sprites.append(Slime(264, 264, self))
+		# self.sprites.append(Slime(200, 200, self))
+		# self.sprites.append(Slime(264, 200, self))
+		# self.sprites.append(Slime(200, 264, self))
+		# self.sprites.append(Slime(264, 264, self))
 		# self.sprites.append(HomingFireball(700, 700, self, testSlime))
 
 
 		# for i in range(30):
 		# 	self.sprites.append(Slime(random.randrange(0,800), random.randrange(0, 500), self))
 
-		self.sprites.append(Border(450, 400)) # Use as an invisible border on top of tile maps. Experimental.
-		self.sprites.append(Border(450, 450))
-		self.sprites.append(Border(500, 400))
-		self.sprites.append(Border(500, 450))
-		self.sprites.append(Border(450, 500)) # Use as an invisible border on top of tile maps. Experimental.
-		self.sprites.append(Border(450, 550))
-		self.sprites.append(Border(500, 500))
-		self.sprites.append(Border(500, 550))
 	def update(self):
 		# Update all sprites
 		self.updateAllSprites()
 
 		# Check for collisions with border
-		#sself.checkBorderCollisions()
+		#self.checkBorderCollisions()
 
 		# Check for collisions with other sprites
 		self.checkSpriteCollisions()

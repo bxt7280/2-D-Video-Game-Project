@@ -9,28 +9,19 @@ Goals
     - SavePreviousCoordinates?
     - calculateModuloOffsets?
 
-*- Find better way than ctrlKeyPressDelay variable in controller?
-    - could use events instead of keypress
-
 - Find way to univerallize loading images into spritesheet? (make modular method for sprite class)
 
-- Is the contactWithBorder method in model even needed?
+- Perhaps remove border collision functionality.
 
 - Perhaps change sprites x and y to vector
 
-- Make method to print any text on screen. perhaps in the view
+- Make method to print any text on screen. Perhaps in the view
     - Try to make modular method so printing text is easy
 
-- Find a way to save current list of sprites using JSON OR save players meta game data such as upgrades
+- Save players meta game data such as upgrades
 
 - Flying Swords
     - Optimize loading of images due to framerate drops
-
-- Add camera and increase size of map
-    - Make sure sprites positions are updated correctly
-- turn character movement in controller into method?
-
-- Tighten Up Velle's health bar
 
 - Modify draw methods in sprites to not take in a screen parameter?
 
@@ -44,21 +35,9 @@ Goals
 
 - Make sure mapEditor works with map scroll functionality. (Adding/Removing Sprites)
 
-- Implement quadtree for optimization
+- Experiment with enemy placement in tiled program. 
+    - Make method that will add enemy sprites to main sprites list in model class
 
 TODAY'S GOALS
-- Find a way to load a map created with third party program
-    *- tiled program
-        - https://www.mapeditor.org/
-    *- use pytmx library
-    *- make a map class with instance of tmx_data
-    *- make function to draw tiles
-    - experiment with border/obstactle collision 
-        - make a method that will return collidiable tiles as invisible sprites
-        - rename border class in sprite to obstactle
-        - modify border class to adjust size when instanciated. 
-    - experiment with enemy placement via tiled. 
-        - make method that will add enemy sprites to main sprites list in model class
-*- resolve rect collision resolution catching issue
-
+- Implement quadtree for optimization
         

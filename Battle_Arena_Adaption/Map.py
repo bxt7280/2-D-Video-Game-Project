@@ -1,6 +1,7 @@
 import pygame
 from pytmx.util_pygame import load_pygame
 from Util import camera
+from Sprites import Obstacle
 
 class Map():
     def __init__(self, path, screen):
@@ -16,10 +17,24 @@ class Map():
     
     def drawWithOffset(self, offsetX, offsetY):
         for layer in self.tmxData:
-            for tile in layer.tiles():
-                x_pixel = (tile[0] * 32) + offsetX
-                y_pixel = (tile[1] * 32) + offsetY  
-                self.screen.blit(tile[2], (x_pixel, y_pixel))
+            if layer.visible and layer.name != None:
+                for tile in layer.tiles():
+                    x_pixel = (tile[0] * 32) + offsetX
+                    y_pixel = (tile[1] * 32) + offsetY  
+                    self.screen.blit(tile[2], (x_pixel, y_pixel))
+
+    def extractObstacles(self):
+        obstacles = self.tmxData.objects
+        listOfObstacles = []
+        for obstacle in obstacles:
+            listOfObstacles.append(Obstacle(obstacle.x, obstacle.y, obstacle.width, obstacle.height))
+
+        return listOfObstacles
             
+        
+        
+        
+
+   
 
         

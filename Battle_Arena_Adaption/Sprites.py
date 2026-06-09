@@ -336,23 +336,25 @@ class MainCharacter(Sprite):
 		self.x += dx
 		self.y += dy
 
-		for sprite in self.model.sprites:
-			if isinstance(sprite, Border):
-				spriteRect = pygame.Rect(sprite.x + sprite.hitboxLeft, sprite.y + sprite.hitboxTop, sprite.w + sprite.hitboxW, sprite.h + sprite.hitboxH)
-				mainCharRect = pygame.Rect(self.x + self.hitboxLeft, self.y + self.hitboxTop, self.w + self.hitboxW, self.h + self.hitboxH)
-				if mainCharRect.colliderect(spriteRect):
-					if dx > 0: # Moving right; Hit the left side of the wall
-						mainCharRect.right = spriteRect.left
-						self.x = mainCharRect.x - self.hitboxLeft
-					if dx < 0: # Moving left; Hit the right side of the wall
-						mainCharRect.left = spriteRect.right
-						self.x = mainCharRect.x - self.hitboxLeft
-					if dy > 0: # Moving down; Hit the top side of the wall
-						mainCharRect.bottom = spriteRect.top
-						self.y = mainCharRect.y - self.hitboxTop
-					if dy < 0: # Moving up; Hit the bottom side of the wall
-						mainCharRect.top = spriteRect.bottom
-						self.y = mainCharRect.y - self.hitboxTop
+		for sprite in self.model.obstacles:
+			collisionOffsets = self.model.calculateCollisionOffsets(self, sprite)		
+			collisionOffsetX = collisionOffsets[0]
+			collisionOffsetY = collisionOffsets[1]
+			spriteRect = pygame.Rect(sprite.x + sprite.hitboxLeft + collisionOffsetX, sprite.y + sprite.hitboxTop + collisionOffsetY, sprite.w + sprite.hitboxW, sprite.h + sprite.hitboxH)
+			mainCharRect = pygame.Rect(self.x + self.hitboxLeft, self.y + self.hitboxTop, self.w + self.hitboxW, self.h + self.hitboxH)
+			if mainCharRect.colliderect(spriteRect):
+				if dx > 0: # Moving right; Hit the left side of the wall
+					mainCharRect.right = spriteRect.left
+					self.x = mainCharRect.x - self.hitboxLeft
+				if dx < 0: # Moving left; Hit the right side of the wall
+					mainCharRect.left = spriteRect.right
+					self.x = mainCharRect.x - self.hitboxLeft
+				if dy > 0: # Moving down; Hit the top side of the wall
+					mainCharRect.bottom = spriteRect.top
+					self.y = mainCharRect.y - self.hitboxTop
+				if dy < 0: # Moving up; Hit the bottom side of the wall
+					mainCharRect.top = spriteRect.bottom
+					self.y = mainCharRect.y - self.hitboxTop
 
 	def rectCollideWithSprite(self, sprite):
 		if isinstance(sprite, Slime):
@@ -970,7 +972,7 @@ class Slime(Sprite):
 		self.distVector.x = self.x + self.hitboxLeft
 		self.distVector.y = self.y + self.hitboxTop
 	
-		#self.trackMainCharacter()
+		self.trackMainCharacter()
 
 		# Update hitboxRect and hitboxCenter
 		self.hitboxRect = pygame.Rect(self.x + self.hitboxLeft, self.y + self.hitboxTop, 
@@ -1187,9 +1189,9 @@ class FlyingSword(Sprite):
 		return surf, rect
 
 # Imageless sprite used for invisible boundaries
-class Border(Sprite):
-	def __init__(self, xPos, yPos):
-		super(Border, self).__init__(xPos, yPos, 50, 50, False, False)
+class Obstacle(Sprite):
+	def __init__(self, xPos, yPos, width, height):
+		super(Obstacle, self).__init__(xPos, yPos, width, height, False, True)
 		self.hitboxLeft = 0
 		self.hitboxTop = 0
 		self.hitboxW = 0

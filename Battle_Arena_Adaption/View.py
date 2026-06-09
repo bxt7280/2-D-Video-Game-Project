@@ -1,7 +1,7 @@
 import pygame
-from Sprites import Border, Slime, MainCharacter
+from Sprites import Obstacle, Slime, MainCharacter
 from Map import Map
-from Util import camera, Direction
+from Util import camera
 
 class View():
 	def __init__(self, model, screen, screenSize):
@@ -14,6 +14,7 @@ class View():
 		self.currentMap = Map("./Maps/testMapLarge/testMapLarge.tmx", self.screen)
 		self.currentMapSize = (2400, 2400)
 		self.model.currentMapSize = self.currentMapSize 
+		self.model.obstacles = self.currentMap.extractObstacles()
 		self.background = pygame.image.load("./Images/forestBackground.png")
 
 		# User text input
@@ -40,7 +41,7 @@ class View():
 
 	def drawSprites(self):
 		for sprite in self.model.sprites:
-			if not isinstance(sprite, Border):
+			if not isinstance(sprite, Obstacle):
 				sprite.draw(self.screen)
 	
 			if self.model.hitBoxModeOn:
@@ -85,37 +86,21 @@ class View():
 				
 				pygame.draw.rect(self.screen, "black", (sprite.x - camera.x , sprite.y - camera.y, 
 				sprite.w,sprite.h ), 1)
-				
 
+		for sprite in self.model.obstacles:
+			if self.model.hitBoxModeOn:
+				pygame.draw.rect(self.screen, "green", (sprite.x - camera.x , sprite.y - camera.y, 
+				sprite.w,sprite.h ), 1)
+				
 	def drawHealthBar(self):
 		playerHP = round(self.model.mainCharacter.hp/self.model.mainCharacter.maxHp * 100, 2)	
 		playerHpSurface = self.base_font.render("Life: " + str(playerHP) + "%", True, (255,255,255))
-		self.screen.blit(playerHpSurface,(self.screen_size[0] - 350, 0))
+		self.screen.blit(playerHpSurface,(self.screen_size[0] - 200, 0))
 
-		healthBar = pygame.image.load("./Images\HPBarBoldFull_Test1.png").convert_alpha()
-		healthBarRect = healthBar.get_rect()
+		pygame.draw.rect(self.screen, "white", (self.screen_size[0] - 200, self.screen_size[1] - 778, 200, 36), 2)				
+		pygame.draw.rect(self.screen, "#CC0000", (self.screen_size[0] - 200 + 2, self.screen_size[1] - 778 + 2, 196 * (playerHP/100), 32))
 
-		#self.screen.blit(healthBar, (0, 0))
-		#pygame.draw.rect(self.screen, "black", healthBarRect, 1)
-		healthBarRect.x = 22
-		healthBarRect.y = 149
-		#healthBarRect.w = 340
-		healthBarRect.w = 340 * (playerHP/100)
-		healthBarRect.h = 54
-
-		#pygame.draw.rect(self.screen, "red", healthBarRect, 1)
-
-		self.screen.blit(healthBar, (self.screen_size[0] - 350, self.screen_size[1] - 778), healthBarRect)
-
-		#pygame.draw.rect(self.screen, "white", (self.screen_size[0] - 200, self.screen_size[1] - 778, 200, 36), 2)
-		#pygame.draw.rect(self.screen, "black", (self.screen_size[0] - 200 + 2, self.screen_size[1] - 778 + 2, 196, 32), 2)	
-		#pygame.draw.rect(self.screen, "#CC0000", (self.screen_size[0] - 200 + 4, self.screen_size[1] - 778 + 4, 192 * (playerHP/100), 28))
-		# pygame.draw.rect(self.screen, "#990000", (self.screen_size[0] - 200 + 4, self.screen_size[1] - 778 + 4, 192 * (playerHP/100), 3))
-		# pygame.draw.rect(self.screen, "white", (self.screen_size[0] - 200 + 4, self.screen_size[1] - 778 + 12, 192 * (playerHP/100), 6))
-				
-		#pygame.draw.rect(self.screen, "#CC0000", (self.screen_size[0] - 200 + 2, self.screen_size[1] - 778 + 2, 196 * (playerHP/100), 32))
-
-	# Infinite scrolling map
+	# Draw infinite scrolling map
 	def drawMap(self):
 		# Center image
 		self.currentMap.drawWithOffset(-camera.x, -camera.y)
