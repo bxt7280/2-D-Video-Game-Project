@@ -26,7 +26,7 @@ class Game():
 			self.m.update()
 			self.v.update()
 			self.clock.tick(30)
-			#print(self.clock.get_fps())
+			print("fps: ", self.clock.get_fps())
 			
 		print("Goodbye")
 

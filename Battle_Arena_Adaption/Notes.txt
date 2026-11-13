@@ -40,4 +40,6 @@ Goals
 
 TODAY'S GOALS
 - Implement quadtree for optimization
-        
+
+
+- Make sure pygame.vector2 is imported consistently between classes.

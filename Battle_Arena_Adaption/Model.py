@@ -1,6 +1,9 @@
 import random
 from Sprites import *
 from Util import Direction
+from pygame.math import Vector2
+from Quadtree import *
+from Range import *
 
 class Model():
 	def __init__(self, screen, screenSize):
@@ -14,6 +17,10 @@ class Model():
 		self.sprites.append(self.mainCharacter) 
 		self.obstacles = []
 		self.currentMapSize = (0, 0)
+
+		# Quadtree experiment
+		self.NODE_CAPACITY = 4
+		self.showRange = True
 
 		# Toggle Hitbox mode on/off
 		self.hitBoxModeOn = False
@@ -40,8 +47,60 @@ class Model():
 		#self.checkBorderCollisions()
 
 		# Check for collisions with other sprites
-		self.checkSpriteCollisions()
+		#self.checkSpriteCollisions()
 
+		# QUADTREE 
+		boundary = Rectangle(Vector2(0, 0), Vector2(self.currentMapSize[0], self.currentMapSize[1]))
+		quadTree = QuadTree(self.NODE_CAPACITY, boundary)
+
+		for sprite in self.sprites:
+			quadTree.insert(sprite)
+
+		for sprite in self.sprites:
+			xx = sprite.hitboxCenter[0]
+			yy = sprite.hitboxCenter[1]
+			r = sprite.radius * 4
+
+			# Circle range
+			rangeCircle = Circle(Vector2(xx, yy), r)
+			rangeCircle.color = (0, 255 ,255)
+			rangeCircle.lineThickness = 1
+
+			# Rectange range example
+			rangeRect = Rectangle(Vector2(xx - r/2, yy - r/2), Vector2(r, r))
+			rangeRect.color = (190, 210, 55)
+			rangeRect.lineThickness = 1
+
+			# rangeRect or rangeCircle
+			range = rangeCircle
+			sprite.range = range
+			others = quadTree.queryRange(range)
+
+			for other in others:
+				# if isinstance(sprite, MainCharacter) and isinstance(other, Slime):
+				# 	print(other)
+				if other != sprite:
+					# Mask Collision for Slimes and FlyingSword
+					if isinstance(sprite, Slime) and isinstance(other, FlyingSword):
+						if self.maskContactWithSprite(sprite, other):
+							sprite.maskCollideWithSprite(other)
+					# Circle Collision for Slime vs Slime
+					elif isinstance(sprite,Slime,) and isinstance(other, Slime):
+						collisionResult = self.circleContactWithSprite(sprite, other)
+						if collisionResult[0]:	
+							sprite.circleCollideWithSprite(other, collisionResult[1], collisionResult[2])
+					# Rectangle Collision
+					else:
+						if self.contactWithSprite(sprite, other): 
+							sprite.rectCollideWithSprite(other)
+
+		# mainCharacter will pulsate red if at least one collision
+		# if self.mainCharacter.collisionCount <= 0:
+		# 	self.mainCharacter.pulsateRed = False
+		# else:
+		# 	self.mainCharacter.pulsateRed = True
+
+		
 		# Add sprites from spriteListBuffer
 		# Used because one cannot add sprites to a list while iterating through it
 		self.addBufferedSprites()
@@ -51,6 +110,8 @@ class Model():
 
 		# Tell all applicable sprites to save their coordinates
 		self.universalSavePreviousCoordinates()
+
+		print(len(self.sprites))
 
 	def updateAllSprites(self):
 		for sprite in self.sprites:
@@ -176,10 +237,10 @@ class Model():
 		
 	def circleContactWithSprite(self, a, b):
 		depth = 0
-		normal = pygame.math.Vector2(0,0)
+		normal = Vector2(0,0)
 
 		distOffsets = self.calculateDistanceOffsets(a, b)
-		bWithOffsets = pygame.math.Vector2(b.distVector.x + distOffsets[0], b.distVector.y + distOffsets[1])
+		bWithOffsets = Vector2(b.distVector.x + distOffsets[0], b.distVector.y + distOffsets[1])
 		
 		n = bWithOffsets - a.distVector
 		distSq = n.length_squared()
@@ -196,7 +257,7 @@ class Model():
 			normal = n / dist
 		else:
 			depth = r2;
-			normal = pygame.math.Vector2(1,0)
+			normal = Vector2(1,0)
 		
 		return [True, depth, normal]
 				

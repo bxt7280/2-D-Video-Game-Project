@@ -3,6 +3,7 @@ import os
 import random
 import math
 from Util import Direction, SpriteSheet, camera
+from pygame.math import Vector2
 
 class Sprite():
 	def __init__(self, xPos, yPos, w, h, canCollideWithBorder, canCollideWithSprite):
@@ -121,7 +122,7 @@ class MainCharacter(Sprite):
 		self.currentSpriteSheet = self.idleSpriteSheets[5]
 
 		# Create a vector to determine distance between sprites
-		self.distVector = pygame.math.Vector2(self.x, self.y)
+		self.distVector = Vector2(self.x, self.y)
 
 		# For red pulsating effect on mainCharacter
 		self.currentAlpha = 255
@@ -132,6 +133,10 @@ class MainCharacter(Sprite):
 								self.w + self.hitboxW, self.h + self.hitboxH)
 
 		self.hitboxCenter = self.hitboxRect.center
+		self.radius = 65
+
+		# Range for Quadtree
+		self.range = None
 	
 	def update(self):
 		# Reset number of collisions
@@ -175,8 +180,11 @@ class MainCharacter(Sprite):
 		else:
 			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - camera.x, self.y - camera.y)
 
+		self.range.Draw(screen)
+
 		if self.model.mainCharacter.pulsateRed == False:
 			self.currentAlpha = 255
+
 
 	def assignCurrentAlpha(self):
 		if self.alphaDirectionSwitch == True:
@@ -657,7 +665,7 @@ class HomingFireball(Sprite):
 		self.vert_vel = 5.0
 		self.model = model
 		self.targetSprite = targetSprite
-		self.distVector = pygame.math.Vector2(self.x, self.y)
+		self.distVector = Vector2(self.x, self.y)
 		
 		# Load SpriteSheet
 		if "fireballSpriteSheets" not in self.model.dictOfSpriteSheets.keys():
@@ -713,7 +721,7 @@ class HomingFireball(Sprite):
 		
 	def trackTarget(self):
 		shortestDist = self.model.calculateDistanceOffsets(self, self.targetSprite)		
-		targetDest = pygame.math.Vector2(self.targetSprite.distVector.x + shortestDist[0], self.targetSprite.distVector.y + shortestDist[1])
+		targetDest = Vector2(self.targetSprite.distVector.x + shortestDist[0], self.targetSprite.distVector.y + shortestDist[1])
 		
 		self.distVector.move_towards_ip(targetDest, 5 + self.vert_vel)
 		self.x = self.distVector.x
@@ -943,7 +951,7 @@ class Slime(Sprite):
 		self.image = self.model.dictOfSingleImages["slimeSingleImage"]
 		
 		# Save original position as vector
-		self.originalPos = pygame.math.Vector2(self.x, self.y)
+		self.originalPos = Vector2(self.x, self.y)
 	
 		# Load all SpriteSheets
 		if "slimeSpriteSheets" not in self.model.dictOfSpriteSheets.keys():
@@ -957,7 +965,7 @@ class Slime(Sprite):
 		
 		self.frameDelayCounter = 2 # slow down rate of animation
 
-		self.distVector = pygame.math.Vector2(self.x, self.y) # Vector used to follow mainCharacter
+		self.distVector = Vector2(self.x, self.y) # Vector used to follow mainCharacter
 
 		# Properties for circle based collision
 		# Determine center of hitbox
@@ -967,12 +975,15 @@ class Slime(Sprite):
 		self.hitboxCenter = self.hitboxRect.center
 		self.radius = 30
 
+		# Range for Quadtree
+		self.range = None
+
 	def update(self):
 		# Update distance vector
 		self.distVector.x = self.x + self.hitboxLeft
 		self.distVector.y = self.y + self.hitboxTop
 	
-		self.trackMainCharacter()
+		#self.trackMainCharacter()
 
 		# Update hitboxRect and hitboxCenter
 		self.hitboxRect = pygame.Rect(self.x + self.hitboxLeft, self.y + self.hitboxTop, 
@@ -1021,10 +1032,12 @@ class Slime(Sprite):
 		if camera.x < 0 + self.w and camera.y + camera.height > self.model.currentMapSize[1]:
 			self.currentSpriteSheet.draw(screen, self.currentSpriteCellIndex, self.x - self.model.currentMapSize[0] + -camera.x, self.y + self.model.currentMapSize[1] - camera.y)	
 
+		self.range.Draw(screen)
+
 	def trackMainCharacter(self):
 		shortestDist = self.model.calculateDistanceOffsets(self, self.model.mainCharacter)
 				
-		targetDest = pygame.math.Vector2(self.model.mainCharacter.distVector.x + shortestDist[0], self.model.mainCharacter.distVector.y + shortestDist[1])
+		targetDest = Vector2(self.model.mainCharacter.distVector.x + shortestDist[0], self.model.mainCharacter.distVector.y + shortestDist[1])
 		
 		self.distVector.move_towards_ip(targetDest, 3)
 		self.x = self.distVector.x
@@ -1113,7 +1126,7 @@ class Slime(Sprite):
 class FlyingSword(Sprite):
 	def __init__(self, xPos, yPos, startingAngle, lengthFromPivot, model):
 		super(FlyingSword, self).__init__(xPos, yPos, 124, 23, False, True)
-		self.distVector = pygame.math.Vector2(self.x, self.y)
+		self.distVector = Vector2(self.x, self.y)
 		self.borderRect = pygame.Rect(xPos, yPos, 124, 23)
 		self.currentAlpha = 255
 		self.alphaDirectionSwitch = True
@@ -1122,10 +1135,10 @@ class FlyingSword(Sprite):
 		self.lengthFromPivot = lengthFromPivot
 		self.startingAngle = startingAngle
 
-		self.pivot = pygame.Vector2(xPos, yPos)
+		self.pivot = Vector2(xPos, yPos)
 		self.angle = 0
 
-		self.offset = pygame.Vector2()
+		self.offset = Vector2()
 		self.offset.from_polar((lengthFromPivot, -self.startingAngle))
 
 		self.pos = self.pivot + self.offset
@@ -1142,8 +1155,8 @@ class FlyingSword(Sprite):
 		
 	def update(self):
 		self.angle += 4
-		self.pivot = pygame.Vector2(self.model.mainCharacter.x + self.model.mainCharacter.hitboxLeft + ((self.model.mainCharacter.w + self.model.mainCharacter.hitboxW) / 2), self.model.mainCharacter.y + self.model.mainCharacter.hitboxTop + ((self.model.mainCharacter.h + self.model.mainCharacter.hitboxH) / 2))
-		self.offset = pygame.Vector2()
+		self.pivot = Vector2(self.model.mainCharacter.x + self.model.mainCharacter.hitboxLeft + ((self.model.mainCharacter.w + self.model.mainCharacter.hitboxW) / 2), self.model.mainCharacter.y + self.model.mainCharacter.hitboxTop + ((self.model.mainCharacter.h + self.model.mainCharacter.hitboxH) / 2))
+		self.offset = Vector2()
 		self.offset.from_polar((self.lengthFromPivot, -self.startingAngle))
 		self.pos = self.pivot + self.offset
 
